@@ -58,6 +58,9 @@
   .btn { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 14px; }
   .btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
   .btn:focus-visible { outline: 2px solid var(--navy-2); outline-offset: 2px; }
+  .speed { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; }
+  .speed select { font: inherit; font-weight: 600; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--card); color: var(--ink); }
+  #voice[aria-pressed="true"] { background: #e7f4ec; border-color: #1e7a46; color: #145c33; }
   .links { margin-top: 14px; display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; }
   .links a, .links button { color: var(--navy-2); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; font-weight: 600; }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .links a, :root:not([data-theme="light"]) .links button { color: #8fb4ec; } }
@@ -97,6 +100,7 @@
     <button class="tour-card" data-tour="rep"><span class="kicker">2 minutes</span><span class="t">Rep &amp; district tour</span><span class="d">What a committee member sees: the checklist, top areas, sorting posts, and exporting the list.</span><span class="go">Play the rep tour ▶</span></button>
     <a class="tour-card" href="app.html" style="text-decoration:none;color:inherit"><span class="kicker">Hands-on</span><span class="t">Explore it yourself</span><span class="d">Click around the demo and switch between Staff, Rep, and District views.</span><span class="go">Open the demo ↗</span></a>
   </div>
+  <p class="fine"><a href="guide.html">Read the one-page guide: how it works for staff, reps, and the district</a>.</p>
   <p class="fine">Everything here is sample data that lives only in your browser. The real hub runs on Google Apps Script and a Google Sheet, so staff sign in with their district Google account.</p>
 </section>
 
@@ -112,11 +116,20 @@
       <button class="btn primary" id="play">⏸ Pause</button>
       <button class="btn" id="next" aria-label="Next step">Next ▶</button>
     </div>
+    <div class="controls">
+      <button class="btn" id="voice" aria-pressed="false">🔊 Narration: off</button>
+      <label class="speed">Speed
+        <select id="speed" aria-label="Tour speed">
+          <option value="0.6">Slow</option><option value="0.85" selected>Normal</option><option value="1.25">Fast</option>
+        </select>
+      </label>
+    </div>
     <div class="links">
       <button id="restart">Restart</button>
       <button id="switchTour"></button>
       <button id="home">Choose a tour</button>
       <a href="app.html" target="_blank" rel="noopener">Explore it yourself ↗</a>
+      <a href="guide.html" target="_blank" rel="noopener">How it works (guide) ↗</a>
     </div>
   </aside>
   <div class="stage">
@@ -136,6 +149,37 @@ const frame = $('#app'), viewport = $('#viewport');
 let W = null, D = null;               // iframe window / document
 let LOGICAL_W = 1280, LOGICAL_H = 800, SCALE = 1;
 let runId = 0, fast = false, playing = true;
+
+/* Speed and narration (remembered per viewer). */
+const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+                set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+let SPEED = parseFloat(store.get('mc-tour-speed')) || 0.85;
+let narrate = false;
+const canSpeak = 'speechSynthesis' in window;
+let voice = null;
+function pickVoice() {
+  if (!canSpeak) return;
+  const vs = speechSynthesis.getVoices().filter(v => /^en(-|_)US/i.test(v.lang) || /^en/i.test(v.lang));
+  voice = vs.find(v => /natural|online|google us english|samantha|aria|jenny/i.test(v.name)) || vs[0] || null;
+}
+if (canSpeak) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function hush() { if (canSpeak) speechSynthesis.cancel(); }
+/* Read text aloud; resolves when finished (or right away if narration is off). */
+function speak(text) {
+  if (!narrate || !canSpeak || fast) return Promise.resolve();
+  hush();
+  return new Promise(res => {
+    const u = new SpeechSynthesisUtterance(text);
+    if (voice) u.voice = voice;
+    u.rate = Math.min(1.25, Math.max(0.8, 0.85 + (SPEED - 0.85) * 0.6));
+    u.onend = u.onerror = () => res();
+    speechSynthesis.speak(u);
+    // Chrome can stall long utterances; never let the tour hang on it.
+    setTimeout(res, 2000 + text.split(/\s+/).length * 600);
+  });
+}
+/* How long a caption needs to stay up to be read comfortably (~3 words/second at Normal). */
+function readMs(st) { const words = (st.t + ' ' + st.x).split(/\s+/).length; return (2500 + words * 330) / SPEED; }
 let tour = null, stepIdx = 0;
 const ABORT = 'abort';
 
@@ -158,7 +202,7 @@ function wait(ms) {
   const id = runId;
   return new Promise((res, rej) => {
     const done = () => (id === runId ? res() : rej(ABORT));
-    setTimeout(done, fast ? 0 : ms);   // fast mode still yields, so the app finishes re-rendering
+    setTimeout(done, fast ? 0 : ms / SPEED);   // fast mode still yields, so the app finishes re-rendering
   });
 }
 function rectOf(el) {
@@ -198,7 +242,7 @@ async function pointAt(el, fx = .5, fy = .5) {
   const r = rectOf(el), tx = r.x + r.w * fx, ty = r.y + r.h * fy;
   if (fast) { placeCursor(tx, ty); cur.target = el; cur.fx = fx; cur.fy = fy; return; }
   const sx = cur.x || (frame.getBoundingClientRect().left + 40), sy = cur.y || (frame.getBoundingClientRect().top + 40);
-  const dur = 650, t0 = performance.now(), id = runId;
+  const dur = 800 / SPEED, t0 = performance.now(), id = runId;
   await new Promise(res => {
     (function step(now) {
       if (id !== runId) return res();
@@ -343,10 +387,19 @@ async function goTo(n, opts = {}) {
     for (let i = 0; i < stepIdx; i++) await tour.steps[i].run();
     fast = false;
     if (id !== runId) return;
+    hush();
     await wait(opts.firstDelay ?? 300);
-    await tour.steps[stepIdx].run();
+    // The step's clicks, the narration, and the reading time all run together;
+    // the tour moves on only when all three are done.
+    const st = tour.steps[stepIdx], t0 = performance.now();
+    const spoken = speak(st.t + '. ' + st.x);
+    await st.run();
+    await spoken;
     if (id !== runId) return;
-    if (playing && stepIdx < tour.steps.length - 1) { await wait(500); goTo(stepIdx + 1); }
+    const left = readMs(st) - (performance.now() - t0);
+    if (left > 0) await new Promise(r => setTimeout(r, left));
+    if (id !== runId) return;
+    if (playing && stepIdx < tour.steps.length - 1) { await wait(900); goTo(stepIdx + 1); }
     else if (stepIdx === tour.steps.length - 1) {
       if (playing && tour.loop) { await wait(6000); goTo(0); }
       else { playing = false; paint(); }
@@ -374,7 +427,19 @@ function startTour(name) {
     else setTimeout(check, 150);
   })();
 }
-function stop() { runId++; ring(null); $('#cursor').hidden = true; cur.target = null; }
+function stop() { runId++; hush(); ring(null); $('#cursor').hidden = true; cur.target = null; }
+
+$('#speed').value = String(SPEED);
+if (!$('#speed').value) { $('#speed').value = '0.85'; SPEED = 0.85; }
+$('#speed').addEventListener('change', (e) => { SPEED = parseFloat(e.target.value) || 0.85; store.set('mc-tour-speed', String(SPEED)); });
+if (!canSpeak) $('#voice').hidden = true;
+$('#voice').addEventListener('click', () => {
+  narrate = !narrate;
+  $('#voice').textContent = narrate ? '🔊 Narration: on' : '🔊 Narration: off';
+  $('#voice').setAttribute('aria-pressed', String(narrate));
+  if (!narrate) hush();
+  else if (tour && W) { playing = true; paint(); goTo(stepIdx); }   // read the current step from the top
+});
 
 document.querySelectorAll('[data-tour]').forEach(b => b.addEventListener('click', () => startTour(b.dataset.tour)));
 $('#next').addEventListener('click', () => { if (stepIdx < tour.steps.length - 1) goTo(stepIdx + 1); });
@@ -384,7 +449,7 @@ $('#play').addEventListener('click', () => {
   if (!W) return;
   playing = !playing; paint();
   if (playing) goTo(stepIdx === tour.steps.length - 1 ? 0 : stepIdx);   // resume by replaying the paused step
-  else { runId++; }                                                       // pause: stop the step that is running
+  else { runId++; hush(); }                                               // pause: stop the step and the voice
 });
 $('#switchTour').addEventListener('click', () => { stop(); startTour(tour.other); });
 $('#home').addEventListener('click', () => {

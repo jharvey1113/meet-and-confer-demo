@@ -4,6 +4,7 @@ A self-playing tour of a one-link Meet & Confer hub, made for sharing the idea w
 
 - **Staff tour:** Needs / Wants / Wishes / Questions columns, 👍 instead of duplicates, anonymous posts, comments, meeting-note summaries, and the "What We Heard" share-back.
 - **Rep & district tour:** the December checklist, automatic "top areas," sorting posts, the one-click district spreadsheet export, posting meeting notes, and the read-only district view.
+- **Guide:** `guide.html`, a printable one-page "how it works" for staff, reps, and the district.
 - **Explore it yourself:** `app.html`, the full demo with a Staff / Rep / District switcher.
 
 Everything is sample data stored only in your browser. No real staff, posts, or district accounts are included.

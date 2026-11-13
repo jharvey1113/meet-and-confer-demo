@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meet &amp; Confer Hub Guide</title>
+<meta name="description" content="How the Meet & Confer Hub works for staff, reps, and the district, and how to use the guided demo.">
+<style>
+  :root { --red: #B31942; --navy: #0A3161; --navy-2: #1d4f91; --ink: #1b2230; --muted: #5d6676; --line: #e2e6ed; --bg: #f4f6f9; --card: #fff; --soft: #f1f5fb; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ink: #e8ecf3; --muted: #a3acbb; --line: #2c3442; --bg: #121722; --card: #1b2230; --soft: #202a3b; --navy-2: #8fb4ec; }
+  }
+  :root[data-theme="dark"] { --ink: #e8ecf3; --muted: #a3acbb; --line: #2c3442; --bg: #121722; --card: #1b2230; --soft: #202a3b; --navy-2: #8fb4ec; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  header { background: linear-gradient(115deg, var(--red) 0%, #6a2452 45%, var(--navy) 100%); color: #fff; }
+  header .wrap { padding-top: 26px; padding-bottom: 22px; }
+  header h1 { margin: 0 0 4px; font-size: 28px; }
+  header p { margin: 0; opacity: .9; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+  main { padding: 24px 0 60px; }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  nav.toc a { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; text-decoration: none; color: var(--navy-2); font-weight: 700; font-size: 14px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; margin-bottom: 18px; }
+  h2 { margin: 0 0 4px; font-size: 22px; }
+  h2 .who { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: #fff; background: var(--red); border-radius: 999px; padding: 2px 10px; vertical-align: middle; margin-right: 8px; }
+  .lede { color: var(--muted); margin: 0 0 14px; }
+  ol.steps { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+  ol.steps > li { position: relative; padding: 10px 0 10px 46px; border-top: 1px solid var(--line); counter-increment: s; }
+  ol.steps > li:first-child { border-top: 0; }
+  ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: 10px; width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 800; display: grid; place-items: center; font-size: 14px; }
+  ol.steps b { display: block; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  .tip { background: var(--soft); border-left: 4px solid var(--navy-2); border-radius: 8px; padding: 10px 14px; margin-top: 14px; font-size: 15px; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 6px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .tablewrap { overflow-x: auto; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+  .need { background: #fbe9ee; color: #B31942; } .want { background: #e6eefa; color: #1d4f91; } .wish { background: #efe9fa; color: #6a3fb5; } .q { background: #def3f0; color: #0e7166; }
+  .back { display: inline-block; margin-top: 8px; color: var(--navy-2); font-weight: 700; }
+  .print { float: right; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 8px; padding: 6px 12px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
+  @media print {
+    body { background: #fff; font-size: 12pt; }
+    header { background: none; color: #000; border-bottom: 3px solid #B31942; }
+    nav.toc, .print, .back { display: none; }
+    section { border: 0; padding: 0; margin: 0 0 16pt; break-inside: avoid-page; }
+  }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Meet &amp; Confer Hub: how it works</h1>
+  <p>A one-page guide for staff, site reps, and district leaders.</p>
+</div></header>
+<main class="wrap">
+  <button class="print" onclick="window.print()">Print this guide</button>
+  <nav class="toc" aria-label="Sections">
+    <a href="#idea">The idea</a><a href="#staff">Staff</a><a href="#reps">Site reps</a><a href="#district">District</a><a href="#privacy">Privacy</a><a href="#demo">Using the demo</a>
+  </nav>
+
+  <section id="idea">
+    <h2>The idea</h2>
+    <p class="lede">One link per site replaces the Padlet, the Google Form, and the separate emails.</p>
+    <ul>
+      <li><b>Staff</b> post needs, wants, wishes, and questions, 👍 the ones they agree with, and read a short summary after every meeting.</li>
+      <li><b>Reps</b> get the December checklist, posts sorted into "top areas" automatically, and a one-click copy for the district spreadsheet.</li>
+      <li><b>District leaders</b> can get a read-only view of each site.</li>
+    </ul>
+    <p>Meet &amp; Confer covers working conditions, benefits, and campus needs. It is not a salary-negotiating group.</p>
+  </section>
+
+  <section id="staff">
+    <h2><span class="who">Staff</span>What staff do</h2>
+    <p class="lede">Four tabs: Home, Share Your Input, Meeting Notes, What We Heard.</p>
+    <ol class="steps">
+      <li><b>Open the link and sign in</b>with your district Google account. Home shows what Meet &amp; Confer is, the four December steps (the current one is outlined in red), your rep, and the site meeting time.</li>
+      <li><b>Share Your Input</b>Pick a column: <span class="pill need">Needs</span> to do your job well, <span class="pill want">Wants</span> that would make work better, <span class="pill wish">Wishes</span> for bigger ideas, or <span class="pill q">Questions</span> for the district. Click <b>+ Add</b>, write a short title and any details, and click <b>Post</b>. Check <b>Post anonymously</b> if you'd like.</li>
+      <li><b>👍 instead of repeating</b>If you start typing something that's already posted, the hub shows "Already posted?" Click 👍 on it instead. The most-agreed posts rise to the top.</li>
+      <li><b>Comment</b>Click 💬 on any post to add a comment, anonymously if you like.</li>
+      <li><b>Meeting Notes</b>After each monthly meeting, read the quick summary. Open "Full notes" or the recording for details.</li>
+      <li><b>What We Heard</b>Before the list goes to the district, check that nothing was missed. It also shows the top areas so far. If something's missing, add it before the deadline.</li>
+    </ol>
+    <div class="tip">Once your rep sorts a post, you'll see a label such as <b>Going to M&amp;C</b>, <b>Referred to site</b> (handled by our principal or department), or <b>Answered</b>, with a short note.</div>
+  </section>
+
+  <section id="reps">
+    <h2><span class="who">Reps</span>What site reps do</h2>
+    <p class="lede">Reps see a fifth tab, <b>Rep Page</b>, on the same link.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>When</th><th>Task</th><th>Where in the hub</th></tr></thead>
+      <tbody>
+        <tr><td>By Nov 20</td><td>Intro email to your group</td><td>Rep Page → checklist → <b>Copy a ready-to-send intro email</b>. Add your site meeting time on the Rep Page first.</td></tr>
+        <tr><td>By Dec 1</td><td>Survey + site meeting</td><td>The hub <i>is</i> the survey. Check the board now and then and hide anything that breaks the ground rules.</td></tr>
+        <tr><td>By Dec 4</td><td>Sort posts and share the list back</td><td>Rep Page → All posts: set a <b>Status</b> and a short <b>Note to staff</b> for each post, and fix any <b>Area</b> that's wrong. Then <b>Copy a share-back email</b>.</td></tr>
+        <tr><td>By Dec 4</td><td>Send to the district</td><td><b>Copy for spreadsheet</b> → paste into the district's master spreadsheet. A CSV download is there too.</td></tr>
+        <tr><td>Each month</td><td>Post meeting notes</td><td>Meeting Notes → <b>+ Add meeting notes</b>: a title, a 3–5 bullet quick summary, optional full notes, and an optional recording link.</td></tr>
+      </tbody>
+    </table></div>
+    <div class="tip"><b>Top areas</b> are automatic. Each post is sorted into an area such as Time &amp; schedules, Benefits &amp; leave, or Facilities, using its words, and areas are ranked by posts + 👍. This replaces the extra Google Form ranking step.</div>
+  </section>
+
+  <section id="district">
+    <h2><span class="who">District</span>What district leaders see</h2>
+    <p>The same four tabs plus a read-only <b>Site Summary</b>: totals, the top areas, and every post with its type, status, and 👍 count, including posts a rep has hidden. District viewers can't change statuses, hide posts, or edit notes.</p>
+  </section>
+
+  <section id="privacy">
+    <h2>Privacy, in plain terms</h2>
+    <ul>
+      <li>Only district Google accounts can open a site's hub.</li>
+      <li><b>Anonymous posts store no name or email</b>, so even the rep can't see who wrote them.</li>
+      <li>👍 votes are anonymous too. The hub keeps only the count.</li>
+      <li>Hidden posts stay in the record but no longer show to staff.</li>
+    </ul>
+  </section>
+
+  <section id="demo">
+    <h2>Using the guided demo</h2>
+    <ul>
+      <li>The main link <b>plays by itself</b>: the staff side, then the rep and district side, then it starts over.</li>
+      <li><b>⏸ Pause / ▶ Play</b> stop and resume. <b>◀ Back</b> and <b>Next ▶</b> move one step at a time.</li>
+      <li><b>Speed</b>: choose Slow, Normal, or Fast. Each step stays up long enough to read its caption.</li>
+      <li><b>🔊 Narration</b> reads each step aloud using your browser's built-in voice. Browsers only allow sound after a click, so turn it on yourself.</li>
+      <li><b>Choose a tour</b> to play only the staff side or only the rep side. <b>Explore it yourself</b> opens the demo with a Staff / Rep / District switcher.</li>
+      <li>Everything in the demo is sample data that stays in your browser.</li>
+    </ul>
+    <a class="back" href="./">← Back to the guided demo</a>
+  </section>
+</main>
+</body>
+</html>
