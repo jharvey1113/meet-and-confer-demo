@@ -88,10 +88,10 @@
 </header>
 
 <section class="chooser" id="chooser">
-  <h2>One link instead of a Padlet, a Google Form, and a pile of emails.</h2>
+  <h2>Everything for Meet &amp; Confer, in one place.</h2>
   <p class="lede">Each site gets one page. Staff post needs, wants, wishes, and questions, 👍 what they agree with, and read a quick summary of every meeting. Reps get a checklist, automatic "top areas," and a one-click copy for the district spreadsheet.</p>
   <div class="why">
-    <div><b>For staff</b>Padlet-style columns, anonymous option, duplicate warning, and they can see where their input went.</div>
+    <div><b>For staff</b>The Needs / Wants / Wishes / Questions columns other sites have used, plus an anonymous option, a duplicate check, and a view of where their input went.</div>
     <div><b>For reps</b>Every December task in one place: intro email, survey, share-back, and the district spreadsheet.</div>
     <div><b>For the district</b>A read-only summary of each site, ranked by what staff care about most.</div>
   </div>
@@ -124,6 +124,12 @@
         </select>
       </label>
     </div>
+    <div class="controls" id="voiceRow" hidden>
+      <label class="speed" style="flex:1;min-width:0">Voice
+        <select id="voicePick" aria-label="Narration voice" style="flex:1;min-width:0;max-width:100%"></select>
+      </label>
+    </div>
+    <p class="count" id="voiceTip" hidden style="margin:6px 0 0"></p>
     <div class="links">
       <button id="restart">Restart</button>
       <button id="switchTour"></button>
@@ -156,22 +162,58 @@ const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) 
 let SPEED = parseFloat(store.get('mc-tour-speed')) || 0.85;
 let narrate = false;
 const canSpeak = 'speechSynthesis' in window;
-let voice = null;
+let voice = null, voices = [];
+/* Rank English voices from most to least human-sounding. The "Natural"/"Online" neural voices
+   (built into Microsoft Edge, and Windows 11) sound far less robotic than the older desktop ones. */
+function voiceScore(v) {
+  const n = v.name;
+  let s = /^en[-_]US/i.test(v.lang) ? 5 : 0;
+  if (/natural/i.test(n)) s += 100;
+  if (/online/i.test(n)) s += 60;
+  if (/(aria|jenny|guy|ava|andrew|emma|brian|michelle|christopher)/i.test(n)) s += 20;
+  if (/^google/i.test(n)) s += 30;
+  if (/(samantha|alex|ava|allison|evan|nicky)/i.test(n) && !/microsoft/i.test(n)) s += 40;   // good Apple voices
+  if (/(david|zira|mark)/i.test(n) && /desktop|microsoft/i.test(n) && !/online|natural/i.test(n)) s -= 30; // older robotic ones
+  return s;
+}
+const isNatural = (v) => /natural|online/i.test(v.name) || (/(samantha|ava|allison|evan|nicky)/i.test(v.name) && !/microsoft/i.test(v.name));
 function pickVoice() {
   if (!canSpeak) return;
-  const vs = speechSynthesis.getVoices().filter(v => /^en(-|_)US/i.test(v.lang) || /^en/i.test(v.lang));
-  voice = vs.find(v => /natural|online|google us english|samantha|aria|jenny/i.test(v.name)) || vs[0] || null;
+  voices = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+  const saved = store.get('mc-tour-voice');
+  voice = voices.find(v => v.name === saved) || voices[0] || null;
+  const sel = $('#voicePick');
+  sel.innerHTML = voices.slice(0, 25).map(v => `<option value="${v.name.replace(/"/g, '&quot;')}">${v.name.replace(/</g, '&lt;')}${isNatural(v) ? ' ★' : ''}</option>`).join('');
+  if (voice) sel.value = voice.name;
+  $('#voiceRow').hidden = !voices.length;
+  const tip = $('#voiceTip');
+  tip.hidden = voices.some(isNatural);
+  tip.textContent = 'Tip: for the most natural voice, open this page in Microsoft Edge.';
 }
 if (canSpeak) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+/* Say things the way a person would read them aloud. */
+function forSpeech(text) {
+  return text
+    .replace(/M&C/g, 'Meet and Confer').replace(/&/g, ' and ')
+    .replace(/\+ 👍/g, 'plus thumbs-ups').replace(/👍/g, 'thumbs-up')
+    .replace(/(\d+)\s*–\s*(\d+)/g, '$1 to $2')
+    .replace(/~\s*(\d+)/g, 'about $1').replace(/\s*[–—]\s*/g, ', ')
+    .replace(/"([^"]+)"/g, '$1').replace(/[▶◀↗★🔊⏸]/g, '').replace(/\bDec\b\.?/g, 'December').replace(/\bNov\b\.?/g, 'November')
+    .replace(/\bCSV\b/g, 'C S V').replace(/\bHR\b/g, 'H R')
+    .replace(/\s{2,}/g, ' ').trim();
+}
 function hush() { if (canSpeak) speechSynthesis.cancel(); }
 /* Read text aloud; resolves when finished (or right away if narration is off). */
 function speak(text) {
   if (!narrate || !canSpeak || fast) return Promise.resolve();
   hush();
   return new Promise(res => {
-    const u = new SpeechSynthesisUtterance(text);
-    if (voice) u.voice = voice;
-    u.rate = Math.min(1.25, Math.max(0.8, 0.85 + (SPEED - 0.85) * 0.6));
+    const u = new SpeechSynthesisUtterance(forSpeech(text));
+    if (voice) { u.voice = voice; u.lang = voice.lang; }
+    // Neural voices sound best near their natural pace; older voices sound better a touch slower.
+    const base = voice && isNatural(voice) ? 1.0 : 0.92;
+    u.rate = Math.min(1.25, Math.max(0.8, base + (SPEED - 0.85) * 0.5));
+    u.pitch = 1;
     u.onend = u.onerror = () => res();
     speechSynthesis.speak(u);
     // Chrome can stall long utterances; never let the tour hang on it.
@@ -290,11 +332,11 @@ const TOURS = {
         run: async () => { ring(q('#welcome')); await pointAt(q('#welcome'), .3, .4); await wait(3800); } },
       { t: 'The four December steps', x: 'Staff always know where we are. The current step is outlined in red: share by Dec 1, come to the drop-in, check the list Dec 4, and the rep brings it to the Dec 8 meeting.',
         run: async () => { ring(q('#steps')); await pointAt(q('#steps .step.now') || q('#steps'), .5, .3); await wait(3800); ring(q('#meetInfo')); await pointAt(q('#meetInfo'), .4, .5); await wait(2200); } },
-      { t: 'Share Your Input', x: 'One click takes staff to the board. It looks like the Padlet they already know: Needs, Wants, Wishes, and Questions.',
+      { t: 'Share Your Input', x: 'One click takes staff to the board. It uses the Needs, Wants, Wishes, and Questions columns that have worked well at other sites.',
         run: async () => { await tab('board'); ring(q('#cols')); await pointAt(q('.c-Need .colhead'), .5, .5); await wait(3400); } },
       { t: 'Adding a need', x: 'Under any column, "+ Add" opens a small box. Watch what happens when someone types something that has already been posted…',
         run: async () => { ring(null); await click(q('.c-Need .add')); ring(q('[data-add-form="Need"]')); await type(q('[data-add-form="Need"] [name=title]'), 'Printer paper runs out'); await wait(600); } },
-      { t: '"Already posted?"', x: 'The hub spots the match and suggests a 👍 instead of a duplicate. One click, and the existing post goes from 14 to 15 agreements. No second Google Form needed to rank things.',
+      { t: '"Already posted?"', x: 'The hub spots the match and suggests a 👍 instead of a duplicate. One click, and the existing post goes from 14 to 15 agreements, so the most-agreed ideas rise to the top on their own.',
         run: async () => { S(`refreshSimilar(document.querySelector('[data-add-form="Need"]'))`); await wait(300); ring(q('.c-Need .similar')); await wait(2600);
           await click(q('.c-Need .similar [data-agree]')); ring(qText('.c-Need .post', 'More printer paper')); await wait(2400); await click(q('[data-cancel-add]')); } },
       { t: 'Posting a question, anonymously', x: 'Anyone can post anonymously. The hub doesn\'t store their name at all, so even the rep can\'t see who wrote it.',
@@ -322,7 +364,7 @@ const TOURS = {
         run: async () => { ring(q('#tabs')); await pointAt(q('#tabs button[data-view="rep"]')); await wait(3200); await tab('rep'); } },
       { t: 'The numbers at a glance', x: 'Posts, how many staff took part, total 👍, and what still needs sorting.',
         run: async () => { ring(q('#kpis')); await pointAt(q('#kpis'), .2, .5); await wait(3000); } },
-      { t: 'Top areas, sorted automatically', x: 'The hub sorts every post into an area like Time & schedules, Benefits & leave, or Supplies, and ranks the areas by posts + 👍. This replaces the Google Form ranking step.',
+      { t: 'Top areas, sorted automatically', x: 'The hub sorts every post into an area like Time & schedules, Benefits & leave, or Supplies, and ranks the areas by posts + 👍, so the group\'s priorities are easy to see at a glance.',
         run: async () => { const card = q('#areas').closest('.card'); ring(card); await pointAt(q('#areas .area'), .3, .3); await wait(4600); } },
       { t: 'The December checklist', x: 'The HR director\'s homework, with due dates. The intro email and the Dec 4 share-back email are written for you; one click copies them.',
         run: async () => { ring(q('#taskCard')); await pointAt(q('#tasks .task'), .5, .3); await wait(2600);
@@ -353,7 +395,7 @@ const TOURS = {
 TOURS.full = {
   name: 'Full tour', other: null, role: 'staff', loop: true,
   steps: [
-    { t: 'One link instead of a Padlet, a Form, and a pile of emails', x: 'Each site gets one page. Staff share needs, wants, wishes, and questions and read meeting summaries. Reps get a checklist, automatic top areas, and a one-click export. Watch the staff side first, then the rep side.',
+    { t: 'Everything for Meet & Confer, in one place', x: 'Each site gets one page that builds on what sites already do. Staff share needs, wants, wishes, and questions and read meeting summaries. Reps get a checklist, automatic top areas, and a one-click export. Watch the staff side first, then the rep side.',
       run: async () => { ring(q('#tabs')); await pointAt(q('#hubTitle'), .3, .5); await wait(5000); } },
     ...TOURS.staff.steps.slice(0, -1),
     { t: 'Now the rep side', x: 'Same link, but the hub recognizes the site rep and adds a Rep Page. Everything staff just did shows up here.',
@@ -431,6 +473,11 @@ function stop() { runId++; hush(); ring(null); $('#cursor').hidden = true; cur.t
 
 $('#speed').value = String(SPEED);
 if (!$('#speed').value) { $('#speed').value = '0.85'; SPEED = 0.85; }
+$('#voicePick').addEventListener('change', (e) => {
+  voice = voices.find(v => v.name === e.target.value) || voice;
+  store.set('mc-tour-voice', e.target.value);
+  if (narrate && tour && W) { playing = true; paint(); goTo(stepIdx); }   // hear the new voice right away
+});
 $('#speed').addEventListener('change', (e) => { SPEED = parseFloat(e.target.value) || 0.85; store.set('mc-tour-speed', String(SPEED)); });
 if (!canSpeak) $('#voice').hidden = true;
 $('#voice').addEventListener('click', () => {
