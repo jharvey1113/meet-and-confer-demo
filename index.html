@@ -115,7 +115,7 @@
     <div class="links">
       <button id="restart">Restart</button>
       <button id="switchTour"></button>
-      <button id="home">All tours</button>
+      <button id="home">Choose a tour</button>
       <a href="app.html" target="_blank" rel="noopener">Explore it yourself ↗</a>
     </div>
   </aside>
@@ -305,6 +305,19 @@ const TOURS = {
   }
 };
 
+/* The main link plays everything: an intro, the staff side, then the rep side, and loops. */
+TOURS.full = {
+  name: 'Full tour', other: null, role: 'staff', loop: true,
+  steps: [
+    { t: 'One link instead of a Padlet, a Form, and a pile of emails', x: 'Each site gets one page. Staff share needs, wants, wishes, and questions and read meeting summaries. Reps get a checklist, automatic top areas, and a one-click export. Watch the staff side first, then the rep side.',
+      run: async () => { ring(q('#tabs')); await pointAt(q('#hubTitle'), .3, .5); await wait(5000); } },
+    ...TOURS.staff.steps.slice(0, -1),
+    { t: 'Now the rep side', x: 'Same link, but the hub recognizes the site rep and adds a Rep Page. Everything staff just did shows up here.',
+      run: async () => { ring(null); as('rep'); S(`show('home')`); await wait(300); ring(q('#tabs button[data-view="rep"]')); await pointAt(q('#tabs button[data-view="rep"]')); await wait(3000); ring(null); await tab('rep'); } },
+    ...TOURS.rep.steps.slice(1)
+  ]
+};
+
 /* ===================== Running steps ===================== */
 function paint() {
   const st = tour.steps[stepIdx];
@@ -315,7 +328,8 @@ function paint() {
   $('#barFill').style.width = ((stepIdx + 1) / tour.steps.length * 100) + '%';
   $('#back').disabled = stepIdx === 0;
   $('#play').textContent = playing ? '⏸ Pause' : '▶ Play';
-  $('#switchTour').textContent = 'Switch to ' + TOURS[tour.other].name.toLowerCase();
+  $('#switchTour').hidden = !tour.other;
+  if (tour.other) $('#switchTour').textContent = 'Switch to ' + TOURS[tour.other].name.toLowerCase();
 }
 
 async function goTo(n, opts = {}) {
@@ -333,18 +347,32 @@ async function goTo(n, opts = {}) {
     await tour.steps[stepIdx].run();
     if (id !== runId) return;
     if (playing && stepIdx < tour.steps.length - 1) { await wait(500); goTo(stepIdx + 1); }
-    else if (stepIdx === tour.steps.length - 1) { playing = false; paint(); }
+    else if (stepIdx === tour.steps.length - 1) {
+      if (playing && tour.loop) { await wait(6000); goTo(0); }
+      else { playing = false; paint(); }
+    }
   } catch (e) { fast = false; if (e !== ABORT) console.error(e); }
+}
+
+function appReady() {
+  try {
+    const w = frame.contentWindow;
+    return !!w && w.document.readyState === 'complete' && w.eval('typeof H !== "undefined" && !!H');
+  } catch (e) { return false; }
 }
 
 function startTour(name) {
   tour = TOURS[name]; playing = true;
   $('#chooser').hidden = true; $('#player').hidden = false;
-  try { history.replaceState(null, '', '?tour=' + name); } catch (e) {}
+  try { history.replaceState(null, '', name === 'full' ? location.pathname : '?tour=' + name); } catch (e) {}
   layout();
-  const begin = () => { W = frame.contentWindow; D = W.document; goTo(0, { firstDelay: 600 }); };
-  if (frame.contentWindow && frame.contentWindow.document.readyState === 'complete' && frame.contentWindow.H) begin();
-  else frame.addEventListener('load', () => setTimeout(begin, 200), { once: true });
+  // Wait until the demo app inside the frame has loaded its data, however long that takes (or already took).
+  const myRun = ++runId;
+  (function check() {
+    if (myRun !== runId) return;
+    if (appReady()) { W = frame.contentWindow; D = W.document; goTo(0, { firstDelay: 600 }); }
+    else setTimeout(check, 150);
+  })();
 }
 function stop() { runId++; ring(null); $('#cursor').hidden = true; cur.target = null; }
 
@@ -353,8 +381,10 @@ $('#next').addEventListener('click', () => { if (stepIdx < tour.steps.length - 1
 $('#back').addEventListener('click', () => { if (stepIdx > 0) goTo(stepIdx - 1); });
 $('#restart').addEventListener('click', () => { playing = true; goTo(0); });
 $('#play').addEventListener('click', () => {
+  if (!W) return;
   playing = !playing; paint();
-  if (playing) goTo(stepIdx === tour.steps.length - 1 ? 0 : stepIdx + 1);
+  if (playing) goTo(stepIdx === tour.steps.length - 1 ? 0 : stepIdx);   // resume by replaying the paused step
+  else { runId++; }                                                       // pause: stop the step that is running
 });
 $('#switchTour').addEventListener('click', () => { stop(); startTour(tour.other); });
 $('#home').addEventListener('click', () => {
@@ -362,8 +392,10 @@ $('#home').addEventListener('click', () => {
   try { history.replaceState(null, '', location.pathname); } catch (e) {}
 });
 
-const want = new URLSearchParams(location.search).get('tour');
+// The bare link starts playing right away; ?tour=staff / ?tour=rep play one side; ?menu shows the chooser.
+const params = new URLSearchParams(location.search), want = params.get('tour');
 if (TOURS[want]) startTour(want);
+else if (!params.has('menu')) startTour('full');
 </script>
 </body>
 </html>
