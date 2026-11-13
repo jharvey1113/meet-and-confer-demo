@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meet &amp; Confer Hub (demo)</title>
+<style>
+  :root {
+    --red: #B31942; --navy: #0A3161; --navy-2: #1d4f91;
+    --ink: #1b2230; --muted: #5d6676; --line: #e2e6ed; --bg: #f4f6f9; --card: #fff;
+    --need: #B31942; --need-soft: #fbe9ee;
+    --want: #1d4f91; --want-soft: #e6eefa;
+    --wish: #6a3fb5; --wish-soft: #efe9fa;
+    --question: #0e7166; --question-soft: #def3f0;
+    --ok: #1e7a46; --ok-soft: #e2f4e9;
+    --radius: 14px; --shadow: 0 1px 2px rgba(10,49,97,.06), 0 2px 6px rgba(10,49,97,.06);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  a { color: var(--navy-2); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+
+  /* Header: red → navy */
+  header.top { background: linear-gradient(115deg, var(--red) 0%, #6a2452 45%, var(--navy) 100%); color: #fff; }
+  header.top .wrap { padding-top: 22px; padding-bottom: 18px; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+  .brand .eyebrow { font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase; opacity: .85; }
+  .brand h1 { margin: 2px 0 2px; font-size: 30px; line-height: 1.15; }
+  .brand .sub { font-size: 15px; opacity: .92; }
+  .me { margin-left: auto; font-size: 13px; background: rgba(255,255,255,.16); padding: 6px 12px; border-radius: 999px; }
+  nav.tabs { background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  nav.tabs .wrap { display: flex; gap: 4px; overflow-x: auto; }
+  nav.tabs button { background: none; border: 0; padding: 14px 16px; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; font-weight: 650; color: var(--muted); }
+  nav.tabs button:hover { color: var(--navy); }
+  nav.tabs button.on { color: var(--navy); border-bottom-color: var(--red); }
+
+  .demo { background: #fff6dd; border-bottom: 1px solid #efd99b; font-size: 13px; }
+  .demo .wrap { display: flex; gap: 10px; align-items: center; padding-top: 7px; padding-bottom: 7px; flex-wrap: wrap; }
+  .seg button { border: 1px solid #d6bd76; background: #fff; padding: 3px 10px; cursor: pointer; }
+  .seg button:first-child { border-radius: 6px 0 0 6px; } .seg button:last-child { border-radius: 0 6px 6px 0; }
+  .seg button.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  main { padding: 26px 0 70px; }
+  .view { display: none; } .view.on { display: block; }
+  h2 { font-size: 24px; margin: 0 0 4px; color: var(--navy); } h3 { font-size: 17px; margin: 0 0 8px; color: var(--navy); }
+  .lede { color: var(--muted); margin: 0 0 20px; max-width: 760px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; }
+  .stack > * + * { margin-top: 16px; }
+  .muted { color: var(--muted); } .small { font-size: 14px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .spacer { flex: 1; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 8px 14px; cursor: pointer; font-weight: 650; font-size: 15px; }
+  .btn:hover { border-color: #c3ccd9; }
+  .btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .btn.primary:hover { background: var(--navy-2); }
+  .btn.red { background: var(--red); color: #fff; border-color: var(--red); }
+  .btn.ghost { border-color: transparent; background: transparent; }
+  .btn.sm { padding: 4px 10px; font-size: 13px; border-radius: 8px; }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; }
+  input[type=text], input[type=search], input[type=date], textarea, select { border: 1px solid #cbd3df; border-radius: 10px; padding: 9px 11px; background: #fff; width: 100%; }
+  textarea { min-height: 80px; resize: vertical; }
+  input:focus, textarea:focus, select:focus, button:focus-visible { outline: 2px solid var(--navy-2); outline-offset: 1px; }
+  .pill { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .st { background: #eef1f5; color: #3d4757; }
+  .st-Going-to-M-C, .st-Recommended-to-Board { background: var(--ok-soft); color: var(--ok); }
+  .st-Referred-to-site { background: #fff0d4; color: #835400; }
+  .st-Answered { background: var(--question-soft); color: var(--question); }
+  .empty { text-align: center; padding: 26px; color: var(--muted); border: 2px dashed var(--line); border-radius: var(--radius); background: #fff; }
+
+  /* Home */
+  .home { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .home { grid-template-columns: 1fr; } }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 14px; }
+  @media (max-width: 1000px) { .steps { grid-template-columns: 1fr 1fr; } }
+  .step { border: 1px solid var(--line); border-radius: 12px; padding: 14px; background: #fff; position: relative; }
+  .step .num { width: 28px; height: 28px; border-radius: 50%; background: #e8edf5; color: var(--navy); font-weight: 800; display: grid; place-items: center; font-size: 14px; }
+  .step .date { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin-top: 10px; }
+  .step .what { font-weight: 700; margin-top: 2px; line-height: 1.3; }
+  .step.now { border: 2px solid var(--red); box-shadow: 0 4px 14px rgba(179,25,66,.15); }
+  .step.now .num { background: var(--red); color: #fff; }
+  .step.now .date { color: var(--red); }
+  .step.done { opacity: .6; }
+  .step.done .num { background: var(--ok); color: #fff; }
+  .meetbox { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: #f1f5fb; border-left: 4px solid var(--navy); font-size: 15px; }
+  ol.tl { list-style: none; margin: 0; padding: 0; }
+  ol.tl li { display: grid; grid-template-columns: 64px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  ol.tl li:first-child { border-top: 0; }
+  ol.tl .d { font-weight: 800; color: var(--muted); }
+  ol.tl li.past { opacity: .5; }
+  ol.tl li.next .d { color: var(--red); }
+
+  /* Board: four columns, Padlet-style */
+  .boardhead { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+  .cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 1050px) { .cols { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .cols { grid-template-columns: 1fr; } }
+  .col { background: #eef1f6; border-radius: var(--radius); padding: 10px; }
+  .colhead { border-radius: 10px; padding: 12px 14px; color: #fff; }
+  .colhead h3 { color: #fff; margin: 0; font-size: 19px; display: flex; align-items: center; }
+  .colhead h3 .n { margin-left: auto; font-size: 13px; font-weight: 700; background: rgba(255,255,255,.22); padding: 1px 9px; border-radius: 999px; }
+  .colhead p { margin: 2px 0 0; font-size: 13px; opacity: .92; }
+  .c-Need .colhead { background: var(--need); } .c-Want .colhead { background: var(--want); }
+  .c-Wish .colhead { background: var(--wish); } .c-Question .colhead { background: var(--question); }
+  .add { width: 100%; margin: 10px 0; border: 2px dashed #c4cddb; background: #fff; border-radius: 10px; padding: 10px; font-weight: 700; color: var(--navy); cursor: pointer; }
+  .add:hover { border-color: var(--navy); }
+  .addform { background: #fff; border-radius: 10px; padding: 12px; margin: 10px 0; border: 2px solid var(--navy); }
+  .addform textarea { min-height: 64px; margin-top: 8px; }
+  .addform .row { margin-top: 8px; }
+  .similar { margin-top: 8px; background: #fff8e6; border: 1px solid #f0dca6; border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+  .similar .s { display: flex; gap: 6px; align-items: center; padding: 3px 0; }
+  .list { display: grid; gap: 10px; }
+  .post { background: #fff; border-radius: 10px; padding: 12px 14px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+  .post.hidden { opacity: .55; border-style: dashed; }
+  .post .ttl { font-weight: 650; line-height: 1.35; }
+  .post .det { white-space: pre-wrap; color: #3a4352; font-size: 14px; margin-top: 4px; }
+  .post .note { font-size: 13px; margin-top: 8px; padding: 6px 9px; background: #f4f7fb; border-radius: 6px; }
+  .post .foot { display: flex; gap: 6px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  .post .who { font-size: 12px; color: var(--muted); }
+  .agree.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .comments { margin-top: 8px; border-top: 1px solid var(--line); padding-top: 6px; }
+  .cmt { font-size: 13px; padding: 4px 0; } .cmt.hidden { opacity: .5; }
+  .cmtrow { display: flex; gap: 6px; margin-top: 6px; }
+  .cmtrow input { padding: 6px 9px; font-size: 13px; }
+
+  /* Our list */
+  .ourlist { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 800px) { .ourlist { grid-template-columns: 1fr; } }
+  .ol-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .ol-item:first-of-type { border-top: 0; }
+  .ol-item .votes { font-weight: 800; color: var(--navy); text-align: right; font-size: 14px; white-space: nowrap; }
+  .banner { border-radius: var(--radius); padding: 16px 20px; color: #fff; background: linear-gradient(115deg, var(--red), var(--navy)); margin-bottom: 18px; }
+  .banner b { font-size: 17px; }
+
+  /* Notes */
+  .md h2 { font-size: 17px; margin: 18px 0 6px; } .md h3 { font-size: 15px; margin: 12px 0 4px; }
+  .md ul { margin: 4px 0 8px; padding-left: 22px; } .md p { margin: 6px 0; } .md li { margin: 2px 0; }
+  .quick { margin-top: 10px; background: #f3f6fb; border-left: 4px solid var(--red); border-radius: 8px; padding: 10px 14px; }
+  .quick-h { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
+  .quick .md ul { margin: 4px 0 0; }
+  .md.full { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 6px; }
+  .update .kind { font-size: 12px; font-weight: 800; color: var(--red); text-transform: uppercase; letter-spacing: .6px; }
+
+  /* Rep page */
+  .rep { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .rep { grid-template-columns: 1fr; } }
+  .task { display: grid; grid-template-columns: 26px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .task:first-of-type { border-top: 0; }
+  .task input[type=checkbox] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--ok); }
+  .task .due { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--red); letter-spacing: .5px; }
+  .task.done .due { color: var(--ok); }
+  .task .acts { margin-top: 6px; }
+  .area { display: grid; grid-template-columns: 30px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .area:first-child { border-top: 0; }
+  .area .rank { width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: #fff; font-weight: 800; display: grid; place-items: center; font-size: 14px; }
+  .area .track { background: #eef1f5; border-radius: 6px; height: 10px; margin: 6px 0; overflow: hidden; }
+  .area .fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--red), var(--navy)); }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 600px) { .kpis { grid-template-columns: 1fr 1fr; } }
+  .kpi { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .kpi .n { font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1.1; }
+  .kpi .l { font-size: 13px; color: var(--muted); }
+  table.t { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.t th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); border-bottom: 2px solid var(--line); padding: 8px 6px; }
+  table.t td { border-bottom: 1px solid var(--line); padding: 8px 6px; vertical-align: top; }
+  table.t select, table.t input { font-size: 13px; padding: 5px 7px; }
+  .tablewrap { overflow-x: auto; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 20; max-width: 90vw; }
+  .toast.on { opacity: 1; }
+  .loading { padding: 60px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div class="eyebrow">Sample District · <span id="year">2026-27</span></div>
+      <h1 id="hubTitle">Meet &amp; Confer</h1>
+      <div class="sub" id="hubSub"></div>
+    </div>
+    <div class="me" id="meChip"></div>
+  </div>
+</header>
+<div class="demo" id="demoBar" hidden>
+  <div class="wrap">
+    <b>Demo</b><span class="muted">Sample posts, saved only in this browser.</span>
+    <span>See it as:</span>
+    <span class="seg"><button data-role="staff">Staff</button><button data-role="rep">Rep</button><button data-role="viewer">District view-all</button></span>
+    <button class="btn sm" id="resetDemo">Reset</button>
+  </div>
+</div>
+<nav class="tabs" aria-label="Sections">
+  <div class="wrap" id="tabs">
+    <button data-view="home">Home</button>
+    <button data-view="board">Share Your Input</button>
+    <button data-view="notes">Meeting Notes</button>
+    <button data-view="list">What We Heard</button>
+    <button data-view="rep" id="repTab" hidden>Rep Page</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div class="loading" id="loading">Loading…</div>
+
+  <!-- HOME -->
+  <section class="view" id="v-home">
+    <div class="home">
+      <div class="stack">
+        <div class="card">
+          <h2>What is Meet &amp; Confer?</h2>
+          <p id="welcome" style="margin:6px 0 0"></p>
+          <div class="steps" id="steps"></div>
+          <div class="meetbox" id="meetInfo"></div>
+          <div class="row" style="margin-top:16px">
+            <button class="btn red" data-go="board">Share a need, want, wish, or question →</button>
+          </div>
+        </div>
+        <div class="card" id="latest"></div>
+      </div>
+      <div class="stack">
+        <div class="card"><h3>Your rep<span id="repPlural"></span></h3><div id="reps"></div></div>
+        <div class="card"><h3>Meeting dates</h3><ol class="tl" id="tl"></ol></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOARD -->
+  <section class="view" id="v-board">
+    <div class="boardhead">
+      <div><h2>Share your input</h2>
+        <p class="lede" style="margin:0" id="boardLede">Click <b>+ Add</b> under any column. If someone already said it, click <b>👍</b> instead; the most-agreed items go to the top.</p></div>
+      <div class="spacer"></div>
+      <input type="search" id="q" placeholder="Search posts" aria-label="Search posts" style="max-width:230px">
+    </div>
+    <div class="cols" id="cols"></div>
+  </section>
+
+  <!-- NOTES -->
+  <section class="view" id="v-notes">
+    <div class="row"><div><h2>Meeting notes</h2><p class="lede">The quick version of each monthly Meet &amp; Confer meeting. Open "Full notes" for the details.</p></div><div class="spacer"></div>
+      <button class="btn primary" id="newNote" hidden>+ Add meeting notes</button></div>
+    <div class="card" id="noteForm" hidden style="margin-bottom:16px">
+      <h3 id="noteFormH">New meeting notes</h3>
+      <div class="row" style="align-items:flex-end">
+        <div style="flex:2;min-width:220px"><label class="small" for="nTitle"><b>Title</b></label><input type="text" id="nTitle" maxlength="140" placeholder="M&C #2: Budget & benefits (Dec 8)"></div>
+        <div style="flex:1;min-width:150px"><label class="small" for="nDate"><b>Meeting date</b></label><input type="date" id="nDate"></div>
+      </div>
+      <label class="small" for="nSummary" style="display:block;margin-top:12px"><b>Quick summary</b> <span class="muted">what staff see first: 3–5 bullets, start each line with "- "</span></label>
+      <textarea id="nSummary" style="min-height:110px" placeholder="- What we decided&#10;- What's next&#10;- What staff need to do"></textarea>
+      <label class="small" for="nBody" style="display:block;margin-top:12px"><b>Full notes</b> <span class="muted">optional, behind a "Full notes" button. ## heading, - bullet, **bold**</span></label>
+      <textarea id="nBody" style="min-height:160px"></textarea>
+      <label class="small" for="nLink" style="display:block;margin-top:12px"><b>Recording or slides link</b> <span class="muted">optional; set the Drive file to "your district: anyone with the link"</span></label>
+      <input type="text" id="nLink" maxlength="500" placeholder="https://drive.google.com/…">
+      <div class="row" style="margin-top:12px"><button class="btn primary" id="saveNote">Publish</button><button class="btn" id="cancelNote">Cancel</button></div>
+    </div>
+    <div class="stack" id="notes"></div>
+  </section>
+
+  <!-- WHAT WE HEARD -->
+  <section class="view" id="v-list">
+    <div class="banner" id="listBanner"></div>
+    <div class="ourlist" id="ourList"></div>
+  </section>
+
+  <!-- REP -->
+  <section class="view" id="v-rep">
+    <h2 id="repH">Rep page</h2>
+    <p class="lede" id="repLede"></p>
+    <div class="kpis" id="kpis"></div>
+    <div class="card" style="margin-top:20px">
+      <h3>Top areas</h3>
+      <p class="small muted" style="margin-top:0">Posts are sorted into areas automatically and ranked by posts + 👍. If one lands in the wrong area, change it in the table below.</p>
+      <div id="areas"></div>
+    </div>
+    <div class="rep" style="margin-top:20px">
+      <div class="card" id="taskCard">
+        <h3>HR checklist</h3>
+        <div id="tasks"></div>
+      </div>
+      <div class="stack">
+        <div class="card" id="meetCard">
+          <h3>Our site meeting</h3>
+          <p class="small muted" style="margin-top:0">Shown on the Home page.</p>
+          <input type="text" id="meetInput" maxlength="300">
+          <div class="row" style="margin-top:8px"><button class="btn sm primary" id="saveMeet">Save</button>
+            <span class="spacer"></span><button class="btn sm" id="toggleOpen"></button></div>
+        </div>
+        <div class="card">
+          <h3 id="exportH">Send to the district</h3>
+          <p class="small muted" style="margin-top:0">Every post, most-agreed first, ready to paste into the district spreadsheet.</p>
+          <div class="row"><button class="btn primary" id="copyTsv">Copy for spreadsheet</button><button class="btn" id="dlCsv">Download CSV</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h3>All posts</h3>
+      <p class="small muted" style="margin-top:0" id="postsHint"></p>
+      <div class="tablewrap"><table class="t" id="postTable"></table></div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   API: google.script.run once deployed; an in-browser demo otherwise.
+   ===================================================================== */
+const IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+function api(fn, ...args) {
+  if (!IS_GAS) return Promise.resolve().then(() => Demo[fn](...args));
+  return new Promise((ok, bad) => google.script.run.withSuccessHandler(ok).withFailureHandler(bad)[fn](...args));
+}
+
+const Demo = (() => {
+  const KEY = /[?&]embed=1/.test(location.search) ? 'mc-tour-v1' : 'mc-explore-v1', RKEY = 'mc-hub-demo-role';
+  const day = (s) => new Date(s + 'T12:00:00').toISOString();
+  const who = { staff: { name: 'Demo Teacher', hash: 'me' }, rep: { name: 'Alex Rivera', hash: 'rep' }, viewer: { name: 'District Viewer', hash: 'hr' } };
+  const v = (n) => Array.from({ length: n }, (_, i) => 'v' + i);
+  const it = (id, category, title, details, author, created, status, statusNote, votes, comments) => ({
+    id, category, title, details: details || '', author: author || '', anonymous: !author, authorHash: 'x' + id,
+    created: day(created), status: status || 'New', statusNote: statusNote || '', hidden: false, voters: v(votes || 0), comments: comments || [] });
+  function seed() {
+    return {
+      settings: {
+        HUB_TITLE: 'Meet & Confer', SITE: 'Sample Site', GROUP: 'Certified & Classified Staff',
+        SCHOOL_YEAR: '2026-27', COLLECTION_OPEN: 'TRUE', INPUT_DEADLINE: '2026-12-01',
+        MEETING_INFO: 'Drop-in meeting: Tuesday, Dec 1 · 3:30–4:30 · main office (or join on Meet)',
+        TASK_INTRO: '', TASK_SURVEY: '', TASK_SHAREBACK: '', TASK_SUBMIT: '',
+        WELCOME: 'Meet & Confer is a district committee of staff from every campus. We gather what staff need to do their jobs well (working conditions, benefits, campus needs) and bring recommendations to the Superintendent and Governing Board in April. It is not about salary.'
+      },
+      reps: [{ name: 'Alex Rivera', email: '' }],
+      timeline: [
+        ['2026-11-10', 'M&C #1: Getting organized'], ['2026-12-08', 'M&C #2: Budget & benefits, first share'],
+        ['2027-01-12', 'M&C #3: Narrow to ~15 items'], ['2027-02-09', 'M&C #4: Narrow to ~5 items'],
+        ['2027-03-02', 'M&C #5: Final list & presenters'], ['2027-04-15', 'Board presentation (date TBD)']
+      ].map(r => ({ date: day(r[0]), title: r[1], detail: '', who: '' })),
+      updates: [{ id: 'U1', date: day('2026-11-10'), type: 'Meeting notes', title: 'M&C #1: Getting organized (Nov 10)', author: 'Alex Rivera', pinned: false, link: 'https://drive.google.com/',
+        summary: ['- Meet & Confer brings staff needs to the Superintendent and Board in April. **It is not about salary.**',
+          '- Last year\'s wins included keeping our insurance (about 19% savings) and the $500 wellness incentive.',
+          '- New this year: items that don\'t make the district list go back to the right principal or department.',
+          '- **Your part:** share your needs, wants, wishes, and questions on this hub by Dec 1.'].join('\n'),
+        body: ['## The short version',
+          '- Meet & Confer brings staff needs to the Superintendent and Governing Board in April. **It is not about salary.**',
+          '- Each rep gathers input from their group, brings it to the monthly meeting, and reports back.',
+          '', '## What came out of last year',
+          '- Kept insurance (about 19% savings) and added the $500 wellness premium incentive.',
+          '- Also brought forward: honorarium pay, evaluations, AC/heat control, Wi-Fi, school psych support, parental leave.',
+          '- **New this year:** items that don\'t make the district list get sent back to the right principal or department instead of disappearing.',
+          '', '## Ground rules we agreed to',
+          '- Challenge ideas, not people. Assume positive intent.',
+          '- Bring concerns with a possible solution.',
+          '- Listen to understand before responding.',
+          '', '## What happens next',
+          '- **By Dec 1:** share your input here, and come to our drop-in meeting.',
+          '- **Dec 4:** check "What We Heard" to make sure nothing was missed.',
+          '- **Dec 8:** your rep brings our list to the district meeting.'].join('\n') }],
+      items: [
+        it('1', 'Need', 'More printer paper', 'We run low by the second week of each month.', 'K. Ramos', '2026-11-11', 'Going to M&C', 'Several sites raised this too.', 14),
+        it('2', 'Need', 'Phone line for translation services', 'Hard to reach Spanish-speaking families when the interpreter is booked.', '', '2026-11-11', 'New', '', 11,
+          [{ id: 'c1', author: 'M. Ortiz', text: 'Yes! Attendance calls would go much faster.', created: day('2026-11-12') }]),
+        it('3', 'Need', 'Reliable laptops for online students who test on campus', '', 'D. Lee', '2026-11-12', 'New', '', 6),
+        it('4', 'Want', 'Grading time on weeks progress reports are due', 'A late start or PD block given back as grading time.', '', '2026-11-11', 'Going to M&C', '', 17),
+        it('5', 'Want', 'Combine sick hours and personal time into one bank', '', 'A. Patel', '2026-11-12', 'New', '', 9),
+        it('6', 'Want', 'Name stamps for student passes', 'Hard to tell who sent a student when there\'s only a signature.', '', '2026-11-12', 'Referred to site', 'Small purchase: passed to our principal.', 5),
+        it('7', 'Wish', 'Four-day work weeks', '', '', '2026-11-11', 'New', '', 8),
+        it('8', 'Wish', 'Paid parental leave', 'Would help recruit and keep good teachers who want to start families.', 'J. Nguyen', '2026-11-12', 'New', '', 19),
+        it('9', 'Question', 'How will prep time work for online and non-traditional staff under the block schedule?', '', '', '2026-11-12', 'New', '', 12,
+          [{ id: 'c2', author: 'Anonymous', text: 'Same question about contract hours on block days.', created: day('2026-11-12') }]),
+        it('10', 'Question', 'Do part-time staff at multiple sites get one rep or two?', '', 'R. Carter', '2026-11-12', 'Answered', 'You can go to either rep. We share everything.', 3)
+      ]
+    };
+  }
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || seed(); } catch (e) { return seed(); } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} };
+  const role = () => { try { const r = localStorage.getItem(RKEY); return who[r] ? r : 'staff'; } catch (e) { return 'staff'; } };
+  let db = load();
+  const me = () => who[role()];
+  const find = (id) => db.items.find(i => i.id === id);
+  const repOnly = () => { if (role() !== 'rep') throw new Error('Only site reps can do that.'); };
+  function hub() {
+    const r = role(), m = me(), staff = r === 'staff';
+    const ppl = new Set(); db.items.forEach(i => { ppl.add(i.authorHash); i.voters.forEach(x => ppl.add(x)); });
+    return JSON.parse(JSON.stringify({
+      me: { name: m.name, role: r }, settings: db.settings, categories: ['Need', 'Want', 'Wish', 'Question'],
+      statuses: ['New', 'Under review', 'Going to M&C', 'Referred to site', 'Answered', 'Combined', 'Recommended to Board'],
+      reps: db.reps, timeline: db.timeline, updates: db.updates, participants: ppl.size, hubUrl: location.href.split('#')[0],
+      items: db.items.filter(i => !(i.hidden && staff && i.authorHash !== m.hash)).map(i => ({
+        id: i.id, category: i.category, topic: i.topic || '', title: i.title, details: i.details, created: i.created,
+        author: i.anonymous ? 'Anonymous' : i.author, anonymous: i.anonymous, status: i.status, statusNote: i.statusNote, hidden: i.hidden,
+        mine: i.authorHash === m.hash, support: i.voters.length, supportedByMe: i.voters.includes(m.hash),
+        comments: i.comments.filter(c => !(c.hidden && staff)) }))
+    }));
+  }
+  const done = () => { save(); return hub(); };
+  return {
+    setRole(r) { try { localStorage.setItem(RKEY, r); } catch (e) {} },
+    reset() { db = seed(); save(); },
+    getHub: hub,
+    postItem(x) {
+      if (db.settings.COLLECTION_OPEN !== 'TRUE' && role() === 'staff') throw new Error('Input collection is closed right now.');
+      if (!x.title.trim()) throw new Error('Please write a short title.');
+      db.items.push({ id: 'n' + Date.now(), category: x.category, title: x.title.trim(), details: (x.details || '').trim(),
+        author: x.anonymous ? '' : me().name, anonymous: !!x.anonymous, authorHash: me().hash, created: new Date().toISOString(),
+        status: 'New', statusNote: '', hidden: false, voters: [], comments: [] });
+      return done();
+    },
+    toggleSupport(id) { const i = find(id), h = me().hash, k = i.voters.indexOf(h); k >= 0 ? i.voters.splice(k, 1) : i.voters.push(h); return done(); },
+    postComment(id, text, anon) { if (!text.trim()) throw new Error('Comment is empty.'); find(id).comments.push({ id: 'c' + Date.now(), author: anon ? 'Anonymous' : me().name, text: text.trim(), created: new Date().toISOString(), hidden: false }); return done(); },
+    withdrawItem(id) { const i = find(id); i.hidden = true; i.statusNote = 'Withdrawn by author'; return done(); },
+    setItemStatus(id, s, note) { repOnly(); const i = find(id); i.status = s; i.statusNote = note || ''; return done(); },
+    setItemHidden(id, h) { repOnly(); find(id).hidden = !!h; return done(); },
+    setCommentHidden(cid, h) { repOnly(); db.items.forEach(i => i.comments.forEach(c => { if (c.id === cid) c.hidden = !!h; })); return done(); },
+    postUpdate(x) {
+      repOnly();
+      if (!x.title.trim()) throw new Error('Title is required.');
+      if (!x.summary.trim()) throw new Error('Add a quick summary; that is what staff read first.');
+      if (x.link && !/^https:\/\//i.test(x.link.trim())) throw new Error('The recording/slides link must start with https://');
+      const row = { date: x.date ? day(x.date) : new Date().toISOString(), type: 'Meeting notes', title: x.title.trim(), summary: x.summary, body: x.body, link: x.link.trim(), pinned: false };
+      if (x.id) Object.assign(db.updates.find(u => u.id === x.id), row);
+      else db.updates.push(Object.assign({ id: 'U' + Date.now(), author: me().name }, row));
+      return done();
+    },
+    deleteUpdate(id) { repOnly(); db.updates = db.updates.filter(u => u.id !== id); return done(); },
+    setItemTopic(id, t) { repOnly(); find(id).topic = t; return done(); },
+    setCollectionOpen(open) { repOnly(); db.settings.COLLECTION_OPEN = open ? 'TRUE' : 'FALSE'; return done(); },
+    saveSetting(k, val) { repOnly(); db.settings[k] = val; return done(); }
+  };
+})();
+
+/* =====================================================================
+   Page
+   ===================================================================== */
+let H = null;
+const ui = { view: 'home', q: '', adding: null, open: {}, full: {}, editing: null };
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const cls = (s) => String(s).replace(/[^A-Za-z0-9]+/g, '-');
+const asDate = (s) => !s ? null : new Date(String(s).length === 10 ? s + 'T12:00:00' : s);
+const fmt = (s, o) => s ? asDate(s).toLocaleDateString('en-US', o || { month: 'short', day: 'numeric' }) : '';
+const isRep = () => H.me.role === 'rep';
+const isLead = () => H.me.role === 'rep' || H.me.role === 'viewer';
+const isOpen = () => String(H.settings.COLLECTION_OPEN).toUpperCase() === 'TRUE';
+const COL = {
+  Need: { title: 'Needs', blurb: 'What you need to do your job well' },
+  Want: { title: 'Wants', blurb: 'What would make work noticeably better' },
+  Wish: { title: 'Wishes', blurb: 'Bigger ideas, if anything were possible' },
+  Question: { title: 'Questions', blurb: 'What you would like the district to answer' }
+};
+const COLOR = { Need: 'var(--need)', Want: 'var(--want)', Wish: 'var(--wish)', Question: 'var(--question)' };
+
+/* Areas: each post is sorted automatically by keywords; the rep can override (saved as the post's topic). */
+const AREAS = [
+  ['Time & schedules', 'prep grading grade schedule schedules block calendar day days week weeks late start early release planning contract four 4-day period bell minutes break lunch'],
+  ['Benefits & leave', 'leave sick insurance benefit benefits parental maternity paternity medical dental vision health wellness wellstyles personal pto retirement family families childcare'],
+  ['Stipends & extra duty', 'stipend stipends coach coaches honorarium longevity duty duties club clubs roving extra'],
+  ['Facilities & campus', 'ac heat hvac air temperature cold hot room rooms classroom building portable portables shade parking bathroom bathrooms restroom repair repairs maintenance campus space spaces furniture walkway lights lighting desks chairs'],
+  ['Technology', 'wifi wi-fi internet laptop laptops computer computers chromebook chromebooks tech technology software device devices projector network canvas synergy login'],
+  ['Supplies & resources', 'paper printer printers copier copiers copies supplies supply calculators rulers materials resources books textbooks curriculum ink stamps stamp'],
+  ['Staffing & student support', 'staffing sub subs substitute substitutes para paras paraprofessional aide aides counselor counselors psych psychologist psychologists social worker caseload interventionist nurse hire hiring'],
+  ['Communication', 'communication translation translator translators interpreter interpreters parents email emails information announcements newsletter language spanish phone line'],
+  ['Safety & discipline', 'safety safe security discipline behavior pass passes hall halls referral referrals lockdown fight fights vape vaping cameras'],
+  ['Training & evaluation', 'pd professional development training trainings evaluation evaluations observation observations mentor mentors certification']
+].map(([name, kw]) => ({ name, kw: kw.split(' ') }));
+const AREA_NAMES = AREAS.map(a => a.name).concat('Other');
+function areaOf(i) {
+  if (AREA_NAMES.includes(i.topic)) return { name: i.topic, auto: false };
+  const words = (t) => String(t || '').toLowerCase().match(/[a-z0-9-]+/g) || [];
+  const tw = words(i.title), dw = words(i.details);
+  const hits = (w, k) => w === k || (k.length >= 5 && w.startsWith(k));
+  let best = { name: 'Other', score: 0 };
+  AREAS.forEach(a => {
+    const score = a.kw.reduce((s, k) => s + 2 * tw.filter(w => hits(w, k)).length + dw.filter(w => hits(w, k)).length, 0);
+    if (score > best.score) best = { name: a.name, score };
+  });
+  return { name: best.name, auto: true };
+}
+function topAreas() {
+  const by = {};
+  H.items.filter(i => !i.hidden).forEach(i => {
+    const n = areaOf(i).name;
+    const a = by[n] = by[n] || { name: n, posts: 0, likes: 0, cats: {}, items: [] };
+    a.posts++; a.likes += i.support; a.cats[i.category] = (a.cats[i.category] || 0) + 1; a.items.push(i);
+  });
+  return Object.values(by).map(a => Object.assign(a, { score: a.posts + a.likes, items: a.items.sort((x, y) => y.support - x.support) }))
+    .sort((a, b) => (a.name === 'Other') - (b.name === 'Other') || b.score - a.score);
+}
+
+// The rep's homework from the first meeting.
+const TASKS = [
+  { key: 'TASK_INTRO', due: '2026-11-20', title: 'Send an intro email to your group', body: 'Introduce yourself, explain Meet & Confer, and share the date of your site meeting.', action: 'email' },
+  { key: 'TASK_SURVEY', due: '2026-12-01', title: 'Gather input + host a site meeting', body: 'Staff post on this hub (that is the survey). Hold your drop-in to talk through and prioritize.' },
+  { key: 'TASK_SHAREBACK', due: '2026-12-04', title: 'Share the compiled list back with your group', body: 'Send staff to "What We Heard" so they can confirm nothing was missed.', action: 'shareback' },
+  { key: 'TASK_SUBMIT', due: '2026-12-04', title: 'Paste the list into the district spreadsheet', body: 'Before the Dec 8 meeting.', action: 'copy' }
+];
+
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2600); }
+async function run(fn, ...args) {
+  try { H = await api(fn, ...args); render(); return true; }
+  catch (e) { toast((e && e.message) || String(e)); return false; }
+}
+function md(src) {
+  let out = '', list = false; const inl = (s) => s.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  esc(src).split('\n').forEach(l => {
+    if (/^\s*-\s+/.test(l)) { if (!list) { out += '<ul>'; list = true; } out += '<li>' + inl(l.replace(/^\s*-\s+/, '')) + '</li>'; return; }
+    if (list) { out += '</ul>'; list = false; }
+    if (/^###\s/.test(l)) out += '<h3>' + inl(l.slice(4)) + '</h3>';
+    else if (/^##\s/.test(l)) out += '<h2>' + inl(l.slice(3)) + '</h2>';
+    else if (l.trim()) out += '<p>' + inl(l) + '</p>';
+  });
+  return out + (list ? '</ul>' : '');
+}
+function show(view) {
+  if (view === 'rep' && !isLead()) view = 'home';
+  ui.view = view;
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+  $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + view));
+  try { history.replaceState(null, '', '#' + view); } catch (e) {}
+}
+function render() {
+  const s = H.settings;
+  $('#loading').hidden = true;
+  $('#hubTitle').textContent = s.HUB_TITLE || 'Meet & Confer';
+  $('#year').textContent = s.SCHOOL_YEAR || '';
+  $('#hubSub').textContent = s.SITE || '';
+  $('#meChip').textContent = H.me.name + (H.me.role === 'rep' ? ' · Rep' : H.me.role === 'viewer' ? ' · View all' : '');
+  $('#repTab').hidden = !isLead();
+  $('#repTab').textContent = isRep() ? 'Rep Page' : 'Site Summary';
+  $('#newNote').hidden = !isRep();
+  if (!IS_GAS) $$('.seg button').forEach(b => b.classList.toggle('on', b.dataset.role === H.me.role));
+  renderHome(); renderBoard(); renderNotes(); renderList(); if (isLead()) renderRep();
+  show(ui.view);
+}
+
+/* ---------- Home ---------- */
+function renderHome() {
+  const s = H.settings, today = new Date(); today.setHours(0, 0, 0, 0);
+  $('#welcome').textContent = s.WELCOME || '';
+  const steps = [
+    { date: s.INPUT_DEADLINE || '2026-12-01', what: 'Share your needs, wants, wishes & questions', go: 'board' },
+    { date: '2026-12-01', what: 'Come to our site drop-in meeting' },
+    { date: '2026-12-04', what: 'Check "What We Heard" so nothing is missed', go: 'list' },
+    { date: '2026-12-08', what: 'Your rep brings our list to Meet & Confer' }
+  ];
+  const cur = steps.findIndex(x => asDate(x.date) >= today);
+  $('#steps').innerHTML = steps.map((x, i) => `<div class="step ${i === cur ? 'now' : cur < 0 || i < cur ? 'done' : ''}">
+      <div class="num">${cur < 0 || i < cur ? '✓' : i + 1}</div><div class="date">${i === 0 ? 'By ' : ''}${fmt(x.date, { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+      <div class="what">${esc(x.what)}</div>${x.go ? `<button class="btn sm ghost" data-go="${x.go}" style="padding-left:0;margin-top:4px;color:var(--navy-2)">Go →</button>` : ''}</div>`).join('');
+  $('#meetInfo').innerHTML = '<b>📅 Our site meeting:</b> ' + esc(s.MEETING_INFO || 'Date coming soon');
+  $('#repPlural').textContent = H.reps.length > 1 ? 's' : '';
+  $('#reps').innerHTML = H.reps.map(r => `<div style="padding:3px 0"><b>${esc(r.name)}</b>${r.email ? `<div class="small"><a href="mailto:${esc(r.email)}">${esc(r.email)}</a></div>` : ''}</div>`).join('')
+    + `<p class="small muted" style="margin:8px 0 0">${esc(s.GROUP || '')}. Questions any time; you don't have to post publicly.</p>`;
+  const tl = H.timeline.slice().sort((a, b) => a.date.localeCompare(b.date));
+  const nx = tl.findIndex(t => asDate(t.date) >= today);
+  $('#tl').innerHTML = tl.map((t, i) => `<li class="${i < nx || nx < 0 ? 'past' : i === nx ? 'next' : ''}"><span class="d">${fmt(t.date)}</span><span>${esc(t.title)}${i === nx ? ' <span class="pill st" style="background:var(--need-soft);color:var(--red)">next</span>' : ''}</span></li>`).join('');
+  const n = latestNotes()[0];
+  $('#latest').innerHTML = n ? `<div class="update"><span class="kind">Latest meeting notes · ${fmt(n.date, { month: 'long', day: 'numeric' })}</span>
+      <h3 style="margin-top:4px">${esc(n.title)}</h3><div class="md">${md(n.summary || n.body.split('\n').slice(0, 4).join('\n'))}</div>
+      <button class="btn sm" data-go="notes">All meeting notes</button></div>` : '<span class="muted">Meeting notes will appear here.</span>';
+}
+
+/* ---------- Board ---------- */
+function postHtml(i) {
+  const open = ui.open[i.id];
+  return `<article class="post ${i.hidden ? 'hidden' : ''}">
+    <div class="ttl">${esc(i.title)}</div>
+    ${i.details ? `<div class="det">${esc(i.details)}</div>` : ''}
+    ${i.status !== 'New' || i.statusNote ? `<div class="note">${i.status !== 'New' ? `<span class="pill st st-${cls(i.status)}">${esc(i.status)}</span> ` : ''}${esc(i.statusNote)}</div>` : ''}
+    <div class="foot">
+      <button class="btn sm agree ${i.supportedByMe ? 'on' : ''}" data-agree="${esc(i.id)}" aria-pressed="${i.supportedByMe}" title="I agree">👍 ${i.support}</button>
+      <button class="btn sm" data-cmts="${esc(i.id)}" aria-expanded="${!!open}">💬 ${i.comments.length}</button>
+      <span class="spacer"></span><span class="who">${esc(i.author)}${i.mine ? ' (you)' : ''}</span>
+    </div>
+    ${open ? `<div class="comments">${i.comments.map(c => `<div class="cmt ${c.hidden ? 'hidden' : ''}"><b>${esc(c.author)}:</b> ${esc(c.text)}
+        ${isRep() ? `<button class="btn sm ghost" data-hide-cmt="${esc(c.id)}" data-h="${c.hidden ? 0 : 1}">${c.hidden ? 'unhide' : 'hide'}</button>` : ''}</div>`).join('')}
+      <div class="cmtrow"><input type="text" placeholder="Add a comment…" maxlength="1000" data-cmt-input="${esc(i.id)}" aria-label="Comment">
+        <button class="btn sm primary" data-cmt-send="${esc(i.id)}">Post</button></div>
+      <label class="small muted"><input type="checkbox" data-cmt-anon="${esc(i.id)}"> comment anonymously</label>
+      ${i.mine && !i.hidden ? `<div><button class="btn sm ghost" data-withdraw="${esc(i.id)}" style="padding-left:0">Remove my post</button></div>` : ''}
+    </div>` : ''}
+  </article>`;
+}
+function addFormHtml(cat) {
+  return `<form class="addform" data-add-form="${cat}" autocomplete="off">
+    <input type="text" name="title" maxlength="140" placeholder="${cat === 'Question' ? 'Your question' : 'In a few words…'}" aria-label="Title" required>
+    <div class="similar" hidden></div>
+    <textarea name="details" maxlength="2000" placeholder="More detail (optional): who it affects, and any idea for a fix"></textarea>
+    <label class="small"><input type="checkbox" name="anon"> Post anonymously</label>
+    <div class="row"><button class="btn primary sm" type="submit">Post</button><button class="btn sm" type="button" data-cancel-add>Cancel</button></div>
+  </form>`;
+}
+function renderBoard() {
+  const q = ui.q.toLowerCase();
+  const open = isOpen() || isRep();
+  $('#cols').innerHTML = H.categories.map(cat => {
+    const all = H.items.filter(i => i.category === cat && (isLead() || !i.hidden));
+    const list = all.filter(i => !q || (i.title + ' ' + i.details).toLowerCase().includes(q))
+      .sort((a, b) => b.support - a.support || b.created.localeCompare(a.created));
+    return `<div class="col c-${cat}">
+      <div class="colhead"><h3>${COL[cat].title}<span class="n">${all.length}</span></h3><p>${COL[cat].blurb}</p></div>
+      ${!open ? '' : ui.adding === cat ? addFormHtml(cat) : `<button class="add" data-add="${cat}">+ Add</button>`}
+      <div class="list">${list.map(postHtml).join('') || `<div class="empty small" style="padding:16px">${q ? 'No matches' : 'Nothing yet'}</div>`}</div>
+    </div>`;
+  }).join('');
+  $('#boardLede').innerHTML = open
+    ? 'Click <b>+ Add</b> under any column. If someone already said it, click <b>👍</b> instead; the most-agreed items rise to the top.'
+    : '<b>Input is closed for now.</b> You can still 👍 and comment.';
+  if (ui.adding) { const f = $(`[data-add-form="${ui.adding}"] input[name=title]`); if (f && document.activeElement !== f) f.focus(); }
+}
+
+const STOP = new Set('the a an and or of for to in on at with we our is are be more need want wish how can do does will it this that by from as staff students get have'.split(' '));
+const words = (s) => (String(s).toLowerCase().match(/[a-z0-9]+/g) || []).filter(w => w.length > 2 && !STOP.has(w));
+function similarHtml(text) {
+  const w = words(text); if (!w.length) return '';
+  const hits = H.items.filter(i => !i.hidden).map(i => ({ i, n: words(i.title + ' ' + i.details).filter(x => w.some(y => x === y || (y.length > 4 && x.startsWith(y.slice(0, 5))))).length }))
+    .filter(x => x.n).sort((a, b) => b.n - a.n || b.i.support - a.i.support).slice(0, 3);
+  if (!hits.length) return '';
+  return '<b>Already posted?</b> A 👍 on an existing post counts more than a repeat.' + hits.map(({ i }) =>
+    `<div class="s"><span>${esc(i.title)}</span><span class="spacer"></span><button type="button" class="btn sm agree ${i.supportedByMe ? 'on' : ''}" data-agree="${esc(i.id)}">👍 ${i.support}</button></div>`).join('');
+}
+
+/* ---------- Notes ---------- */
+function latestNotes() { return H.updates.slice().sort((a, b) => (b.pinned - a.pinned) || b.date.localeCompare(a.date)); }
+function renderNotes() {
+  const ns = latestNotes();
+  $('#notes').innerHTML = ns.length ? ns.map(u => `<article class="card update">
+      <div class="row"><span class="kind">${fmt(u.date, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span><span class="spacer"></span>
+      ${isRep() ? `<button class="btn sm ghost" data-edit-note="${esc(u.id)}">Edit</button><button class="btn sm ghost" data-del-note="${esc(u.id)}">Delete</button>` : ''}</div>
+      <h3 style="margin:4px 0 0;font-size:20px">${esc(u.title)}</h3>
+      ${u.summary ? `<div class="quick"><div class="quick-h">Quick summary</div><div class="md">${md(u.summary)}</div></div>` : ''}
+      <div class="row" style="margin-top:10px">
+        ${u.body && u.summary ? `<button class="btn sm" data-full="${esc(u.id)}" aria-expanded="${!!ui.full[u.id]}">${ui.full[u.id] ? 'Hide full notes ▴' : 'Full notes ▾'}</button>` : ''}
+        ${/^https:\/\//i.test(u.link || '') ? `<a class="btn sm" href="${esc(u.link)}" target="_blank" rel="noopener">🎥 Recording / slides</a>` : ''}
+      </div>
+      ${u.body && (!u.summary || ui.full[u.id]) ? `<div class="md full">${md(u.body)}</div>` : ''}</article>`).join('')
+    : '<div class="empty">No meeting notes yet.</div>';
+}
+
+/* ---------- What we heard ---------- */
+function renderList() {
+  const vis = H.items.filter(i => !i.hidden);
+  const ppl = H.participants;
+  $('#listBanner').innerHTML = `<b>What we heard from ${esc(H.settings.SITE || 'our site')}</b>
+    <div style="margin-top:4px;opacity:.95">${vis.length} posts and ${vis.reduce((a, i) => a + i.support, 0)} 👍 from ${ppl} staff. This is the list your rep brings to Meet &amp; Confer on Dec 8.
+    Something missing? <a href="#board" data-go="board" style="color:#fff;font-weight:700">Add it</a> before Dec 4.</div>
+    ${(() => { const t = topAreas().filter(a => a.name !== 'Other').slice(0, 3); return t.length ? `<div style="margin-top:8px"><b style="font-size:15px">Top areas so far:</b> ${t.map((a, n) => `${n + 1}. ${esc(a.name)}`).join(' &nbsp;·&nbsp; ')}</div>` : ''; })()}`;
+  $('#ourList').innerHTML = H.categories.map(cat => {
+    const list = vis.filter(i => i.category === cat).sort((a, b) => b.support - a.support);
+    return `<div class="card"><h3 style="display:flex;align-items:center"><span class="dot" style="background:${COLOR[cat]}"></span>${COL[cat].title}<span class="spacer"></span><span class="small muted">${list.length}</span></h3>
+      ${list.map(i => `<div class="ol-item"><div>${esc(i.title)}${i.status !== 'New' ? ` <span class="pill st st-${cls(i.status)}">${esc(i.status)}</span>` : ''}</div><div class="votes">👍 ${i.support}</div></div>`).join('') || '<div class="small muted">Nothing yet</div>'}</div>`;
+  }).join('');
+}
+
+/* ---------- Rep page ---------- */
+function renderRep() {
+  const s = H.settings, vis = H.items.filter(i => !i.hidden), rep = isRep();
+  $('#repH').textContent = rep ? 'Rep page' : 'Site summary';
+  $('#repLede').textContent = rep ? 'Your checklist from HR, plus tools to sort posts and send the list.' : 'Everything posted at this site, including hidden posts. Read-only: only the lead rep can change statuses.';
+  $('#kpis').innerHTML = [[vis.length, 'posts'], [H.participants, 'staff took part'], [vis.reduce((a, i) => a + i.support, 0), '👍 agreements'], [vis.filter(i => i.status === 'New').length, 'not yet sorted']]
+    .map(k => `<div class="kpi"><div class="n">${k[0]}</div><div class="l">${k[1]}</div></div>`).join('');
+  const areas = topAreas(), maxScore = Math.max(1, ...areas.map(a => a.score));
+  $('#areas').innerHTML = areas.length ? areas.map((a, n) => `<div class="area">
+      <div class="rank">${a.name === 'Other' ? '–' : n + 1}</div>
+      <div><div class="row"><b>${esc(a.name)}</b><span class="spacer"></span><span class="small muted">${a.posts} post${a.posts === 1 ? '' : 's'} · ${a.likes} 👍</span></div>
+        <div class="track"><div class="fill" style="width:${(a.score / maxScore) * 100}%"></div></div>
+        <div class="small muted">${H.categories.filter(c => a.cats[c]).map(c => `<span class="dot" style="background:${COLOR[c]}"></span>${a.cats[c]} ${c.toLowerCase()}${a.cats[c] > 1 ? 's' : ''}`).join(' &nbsp; ')}</div>
+        <div class="small" style="margin-top:4px">${a.items.slice(0, 3).map(i => `${esc(i.title)} <span class="muted">(${i.support} 👍)</span>`).join(' · ')}</div></div></div>`).join('')
+    : '<div class="small muted">Areas appear once staff start posting.</div>';
+  $('#taskCard').hidden = !rep; $('#meetCard').hidden = !rep;
+  $('#exportH').textContent = rep ? 'Send to the district' : 'Export this site’s list';
+  $('#tasks').innerHTML = TASKS.map(t => {
+    const done = String(s[t.key]).toUpperCase() === 'TRUE';
+    return `<div class="task ${done ? 'done' : ''}"><input type="checkbox" data-task="${t.key}" ${done ? 'checked' : ''} aria-label="${esc(t.title)}">
+      <div><div class="due">${done ? 'Done' : 'Due ' + fmt(t.due, { weekday: 'short', month: 'short', day: 'numeric' })}</div><b>${esc(t.title)}</b><div class="small muted">${esc(t.body)}</div>
+      ${t.action === 'email' ? '<div class="acts"><button class="btn sm" data-copy-email>Copy a ready-to-send intro email</button></div>' : ''}
+      ${t.action === 'shareback' ? '<div class="acts"><button class="btn sm" data-copy-shareback>Copy a share-back email</button></div>' : ''}
+      ${t.action === 'copy' ? '<div class="acts"><button class="btn sm" data-copy-tsv>Copy for spreadsheet</button></div>' : ''}</div></div>`;
+  }).join('');
+  if (document.activeElement !== $('#meetInput')) $('#meetInput').value = s.MEETING_INFO || '';
+  $('#toggleOpen').textContent = isOpen() ? 'Close posting' : 'Reopen posting';
+  $('#postsHint').textContent = rep ? 'Set where each post goes. "Referred to site" = handled by our principal or department lead instead of the district list. Notes show to staff.' : '';
+  const rows = H.items.slice().sort((a, b) => a.hidden - b.hidden || b.support - a.support);
+  $('#postTable').innerHTML = `<thead><tr><th>👍</th><th>Post</th><th>Type</th><th>Area</th><th>Status</th>${rep ? '<th>Note to staff</th><th></th>' : ''}</tr></thead><tbody>` + rows.map(i => { const ar = areaOf(i); return `<tr style="${i.hidden ? 'opacity:.5' : ''}">
+      <td><b>${i.support}</b></td><td><b>${esc(i.title)}</b>${i.details ? `<div class="small muted">${esc(i.details)}</div>` : ''}<div class="small muted">${esc(i.author)} · ${i.comments.length} comments</div></td>
+      <td><span class="dot" style="background:${COLOR[i.category]}"></span>${i.category}</td>
+      <td>${rep ? `<select data-area="${esc(i.id)}" aria-label="Area">${AREA_NAMES.map(x => `<option ${x === ar.name ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>` : esc(ar.name)}${ar.auto ? '<div class="small muted">auto</div>' : ''}</td>
+      <td>${rep ? `<select data-status="${esc(i.id)}" aria-label="Status">${H.statuses.map(x => `<option ${x === i.status ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>` : `<span class="pill st st-${cls(i.status)}">${esc(i.status)}</span>`}</td>
+      ${rep ? `<td><input type="text" data-note="${esc(i.id)}" value="${esc(i.statusNote)}" maxlength="500" aria-label="Note to staff"></td>
+      <td><button class="btn sm ghost" data-hide="${esc(i.id)}" data-h="${i.hidden ? 0 : 1}">${i.hidden ? 'Unhide' : 'Hide'}</button></td>` : ''}</tr>`; }).join('') + '</tbody>';
+}
+
+function exportRows() {
+  const head = ['Site', 'Employee group', 'Area', 'Type', 'Item', 'Details', 'Staff agreeing (👍)', 'Status', 'Rep note'];
+  const rank = {}; topAreas().forEach((a, n) => { rank[a.name] = n; });
+  return [head].concat(H.items.filter(i => !i.hidden).map(i => ({ i, area: areaOf(i).name }))
+    .sort((a, b) => rank[a.area] - rank[b.area] || b.i.support - a.i.support)
+    .map(({ i, area }) => [H.settings.SITE, H.settings.GROUP, area, i.category, i.title, i.details, i.support, i.status, i.statusNote]));
+}
+async function copy(text, msg) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+  toast(msg);
+}
+const repNames = () => H.reps.map(r => r.name).join(' and ');
+function introEmail() {
+  const s = H.settings;
+  return `Subject: Meet & Confer 2026-27: your voice, one link\n\nHi everyone,\n\nI'm ${repNames()}, your Meet & Confer rep for ${s.SITE}. Meet & Confer is a district committee with staff from every campus. We gather what staff need to do their jobs well (working conditions, benefits, campus and program needs) and bring recommendations to the Superintendent and the Governing Board in April. It is not a salary-negotiating group.\n\nEverything is in one place:\n${H.hubUrl}\n\nThere you can:\n- Post your Needs, Wants, Wishes, and Questions (anonymously if you like)\n- 👍 the posts you agree with so the most important items rise to the top\n- Read short notes from each monthly meeting\n\nPlease add your input by ${fmt(s.INPUT_DEADLINE || '2026-12-01', { weekday: 'long', month: 'long', day: 'numeric' })}.\n${s.MEETING_INFO || ''}\n\nThank you!\n${repNames()}`;
+}
+function sharebackEmail() {
+  const s = H.settings, vis = H.items.filter(i => !i.hidden);
+  const top = H.categories.map(c => {
+    const l = vis.filter(i => i.category === c).sort((a, b) => b.support - a.support);
+    return l.length ? `${COL[c].title}:\n` + l.map(i => `- ${i.title} (${i.support} 👍)`).join('\n') : '';
+  }).filter(Boolean).join('\n\n');
+  const areas = topAreas().filter(a => a.name !== 'Other').slice(0, 3)
+    .map((a, n) => `${n + 1}. ${a.name} (${a.posts} posts, ${a.likes} 👍)`).join('\n');
+  return `Subject: Meet & Confer: here's what we heard\n\nHi everyone,\n\nThank you for sharing!${areas ? `\n\nOur top areas so far:\n${areas}` : ''}\n\nHere is everything our group posted, most-agreed first. Please look it over before I bring it to Meet & Confer on Tuesday, Dec 8. If something is missing or worded wrong, add it or comment on the hub by Friday, Dec 4:\n${H.hubUrl}#list\n\n${top}\n\nThank you,\n${repNames()}`;
+}
+
+/* ---------- Events ---------- */
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('button, a'); if (!t) return;
+  const d = t.dataset;
+  if (d.view) return show(d.view);
+  if (d.go) { e.preventDefault(); show(d.go); return window.scrollTo(0, 0); }
+  if (d.add) { ui.adding = d.add; return renderBoard(); }
+  if ('cancelAdd' in d) { ui.adding = null; return renderBoard(); }
+  if (d.agree) {
+    const form = t.closest('form'); const keep = form ? { cat: form.dataset.addForm, title: form.elements.title.value, details: form.elements.details.value } : null;
+    await run('toggleSupport', d.agree);
+    if (keep) { const f = $(`[data-add-form="${keep.cat}"]`); if (f) { f.elements.title.value = keep.title; f.elements.details.value = keep.details; refreshSimilar(f); } }
+    return;
+  }
+  if (d.cmts) { ui.open[d.cmts] = !ui.open[d.cmts]; return renderBoard(); }
+  if (d.cmtSend) {
+    const inp = $(`[data-cmt-input="${CSS.escape(d.cmtSend)}"]`);
+    if (inp.value.trim()) await run('postComment', d.cmtSend, inp.value, $(`[data-cmt-anon="${CSS.escape(d.cmtSend)}"]`).checked);
+    return;
+  }
+  if (d.withdraw) { if (confirm('Remove your post from the board?')) await run('withdrawItem', d.withdraw); return; }
+  if (d.hide) return run('setItemHidden', d.hide, d.h === '1');
+  if (d.hideCmt) return run('setCommentHidden', d.hideCmt, d.h === '1');
+  if (d.full) { ui.full[d.full] = !ui.full[d.full]; return renderNotes(); }
+  if (d.editNote) { openNoteForm(H.updates.find(u => u.id === d.editNote)); return window.scrollTo(0, 0); }
+  if (d.delNote) { if (confirm('Delete these notes?')) await run('deleteUpdate', d.delNote); return; }
+  if (d.role !== undefined && t.closest('.seg')) { Demo.setRole(d.role); H = Demo.getHub(); return render(); }
+  if ('copyEmail' in d) return copy(introEmail(), 'Intro email copied. Paste it into Gmail.');
+  if ('copyShareback' in d) return copy(sharebackEmail(), 'Share-back email copied.');
+  if ('copyTsv' in d) return copyTsv();
+});
+document.addEventListener('submit', async (e) => {
+  const f = e.target.closest('[data-add-form]'); if (!f) return;
+  e.preventDefault();
+  const btn = f.querySelector('[type=submit]'); btn.disabled = true;
+  const cat = f.dataset.addForm;
+  const ok = await run('postItem', { category: cat, title: f.elements.title.value, details: f.elements.details.value, anonymous: f.elements.anon.checked });
+  if (ok) { ui.adding = null; renderBoard(); toast('Posted. Thank you!'); } else btn.disabled = false;
+});
+function refreshSimilar(f) { const box = f.querySelector('.similar'), h = similarHtml(f.elements.title.value); box.innerHTML = h; box.hidden = !h; }
+let simT;
+document.addEventListener('input', (e) => {
+  const f = e.target.closest('[data-add-form]');
+  if (f && e.target.name === 'title') { clearTimeout(simT); simT = setTimeout(() => refreshSimilar(f), 250); }
+});
+document.addEventListener('change', async (e) => {
+  const d = e.target.dataset;
+  if (d.status) { const n = $(`[data-note="${CSS.escape(d.status)}"]`); if (await run('setItemStatus', d.status, e.target.value, n ? n.value : '')) toast('Saved'); }
+  if (d.note) { const i = H.items.find(x => x.id === d.note); if (await run('setItemStatus', d.note, i.status, e.target.value)) toast('Note saved'); }
+  if (d.area) { if (await run('setItemTopic', d.area, e.target.value)) toast('Area set to ' + e.target.value); }
+  if (d.task) await run('saveSetting', d.task, e.target.checked ? 'TRUE' : '');
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.dataset.cmtInput) { e.preventDefault(); $(`[data-cmt-send="${CSS.escape(e.target.dataset.cmtInput)}"]`).click(); }
+  if (e.key === 'Escape' && ui.adding) { ui.adding = null; renderBoard(); }
+});
+$('#q').addEventListener('input', (e) => { ui.q = e.target.value; renderBoard(); });
+function openNoteForm(u) {
+  ui.editing = u ? u.id : null;
+  $('#noteFormH').textContent = u ? 'Edit meeting notes' : 'New meeting notes';
+  $('#nTitle').value = u ? u.title : '';
+  $('#nDate').value = (u ? u.date : new Date().toISOString()).slice(0, 10);
+  $('#nSummary').value = u ? (u.summary || '') : '';
+  $('#nBody').value = u ? (u.body || '') : '';
+  $('#nLink').value = u ? (u.link || '') : '';
+  $('#noteForm').hidden = false; $('#nTitle').focus();
+}
+$('#newNote').addEventListener('click', () => openNoteForm(null));
+$('#cancelNote').addEventListener('click', () => { $('#noteForm').hidden = true; ui.editing = null; });
+$('#saveNote').addEventListener('click', async () => {
+  const ok = await run('postUpdate', { id: ui.editing, date: $('#nDate').value, title: $('#nTitle').value,
+    summary: $('#nSummary').value, body: $('#nBody').value, link: $('#nLink').value });
+  if (ok) { $('#noteForm').hidden = true; ui.editing = null; toast('Published'); }
+});
+$('#saveMeet').addEventListener('click', async () => { if (await run('saveSetting', 'MEETING_INFO', $('#meetInput').value)) toast('Saved'); });
+$('#toggleOpen').addEventListener('click', () => run('setCollectionOpen', !isOpen()));
+function copyTsv() {
+  copy(exportRows().map(r => r.map(c => String(c == null ? '' : c).replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n'), 'Copied. Paste into the district spreadsheet.');
+}
+$('#copyTsv').addEventListener('click', copyTsv);
+$('#dlCsv').addEventListener('click', () => {
+  const csv = '﻿' + exportRows().map(r => r.map(c => '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = 'meet-and-confer-' + String(H.settings.SITE || 'site').replace(/[^A-Za-z0-9]+/g, '-').toLowerCase() + '.csv'; a.click();
+});
+$('#resetDemo').addEventListener('click', () => { if (confirm('Reset the sample posts?')) { Demo.reset(); H = Demo.getHub(); render(); } });
+
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (H && h !== ui.view && ['home', 'board', 'notes', 'list', 'rep'].includes(h)) { show(h); window.scrollTo(0, 0); } });
+(async function boot() {
+  const h = (location.hash || '').slice(1);
+  if (['home', 'board', 'notes', 'list', 'rep'].includes(h)) ui.view = h;
+  if (!IS_GAS && !/[?&]embed=1/.test(location.search)) $('#demoBar').hidden = false;
+  try { H = await api('getHub'); render(); }
+  catch (e) { $('#loading').textContent = 'Could not load: ' + ((e && e.message) || e); }
+})();
+</script>
+</body>
+</html>

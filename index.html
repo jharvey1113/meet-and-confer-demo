@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meet &amp; Confer Hub Tour</title>
+<meta name="description" content="A guided, self-playing tour of a one-link Meet & Confer hub: what staff see and what reps see. Sample data only.">
+<style>
+  :root {
+    --red: #B31942; --navy: #0A3161; --navy-2: #1d4f91; --ink: #1b2230; --muted: #5d6676;
+    --line: #e2e6ed; --bg: #eef1f6; --card: #fff; --gold: #f2b134;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ink: #e8ecf3; --muted: #a3acbb; --line: #2c3442; --bg: #121722; --card: #1b2230; }
+  }
+  :root[data-theme="dark"] { --ink: #e8ecf3; --muted: #a3acbb; --line: #2c3442; --bg: #121722; --card: #1b2230; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body { font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); min-height: 100vh; }
+  button { font: inherit; color: inherit; }
+
+  header.top { background: linear-gradient(115deg, var(--red) 0%, #6a2452 45%, var(--navy) 100%); color: #fff; }
+  header.top .wrap { max-width: 1400px; margin: 0 auto; padding: 14px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  header.top h1 { margin: 0; font-size: 20px; }
+  header.top .sub { font-size: 13px; opacity: .88; }
+  header.top .tag { margin-left: auto; font-size: 12px; background: rgba(255,255,255,.16); padding: 4px 10px; border-radius: 999px; }
+
+  /* Chooser */
+  .chooser { max-width: 1000px; margin: 0 auto; padding: 36px 16px 60px; }
+  .chooser h2 { font-size: 30px; line-height: 1.2; margin: 0 0 8px; color: var(--ink); }
+  .chooser .lede { color: var(--muted); font-size: 17px; max-width: 720px; margin: 0 0 26px; }
+  .why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+  .why div { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; font-size: 15px; }
+  .why b { display: block; margin-bottom: 2px; }
+  .tours { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 800px) { .why, .tours { grid-template-columns: 1fr; } }
+  .tour-card { text-align: left; border: 2px solid var(--line); background: var(--card); border-radius: 16px; padding: 20px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
+  .tour-card:hover, .tour-card:focus-visible { border-color: var(--navy-2); outline: none; box-shadow: 0 6px 20px rgba(10,49,97,.12); }
+  .tour-card .kicker { font-size: 12px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; color: var(--red); }
+  .tour-card .t { font-size: 20px; font-weight: 800; }
+  .tour-card .d { color: var(--muted); font-size: 15px; }
+  .tour-card .go { margin-top: auto; padding-top: 10px; font-weight: 700; color: var(--navy-2); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tour-card .go { color: #8fb4ec; } }
+  .fine { margin-top: 26px; font-size: 13px; color: var(--muted); }
+
+  /* Player */
+  .player { max-width: 1400px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: 330px 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .player { grid-template-columns: 1fr; } .caption { order: 2; } }
+  .caption { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; position: sticky; top: 12px; }
+  .caption .which { font-size: 12px; font-weight: 800; letter-spacing: .7px; text-transform: uppercase; color: var(--red); }
+  .caption h3 { margin: 6px 0 6px; font-size: 21px; line-height: 1.25; }
+  .caption p { margin: 0; color: var(--muted); font-size: 15.5px; min-height: 96px; }
+  .bar { height: 6px; background: var(--line); border-radius: 6px; margin: 16px 0 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--red), var(--navy-2)); }
+  .count { font-size: 13px; color: var(--muted); }
+  .controls { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 8px 12px; cursor: pointer; font-weight: 700; font-size: 14px; }
+  .btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .btn:focus-visible { outline: 2px solid var(--navy-2); outline-offset: 2px; }
+  .links { margin-top: 14px; display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; }
+  .links a, .links button { color: var(--navy-2); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .links a, :root:not([data-theme="light"]) .links button { color: #8fb4ec; } }
+
+  .stage { background: #cfd6e2; border-radius: 14px; padding: 10px; box-shadow: 0 10px 30px rgba(10,49,97,.15); }
+  .chrome { display: flex; gap: 6px; align-items: center; padding: 2px 4px 9px; }
+  .chrome i { width: 10px; height: 10px; border-radius: 50%; background: #fff; opacity: .8; }
+  .chrome .url { flex: 1; background: #fff; border-radius: 6px; font-size: 12px; color: #5d6676; padding: 3px 10px; margin-left: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .viewport { position: relative; overflow: hidden; border-radius: 8px; background: #fff; }
+  .viewport iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; background: #f4f6f9; }
+
+  /* Overlay (cursor + highlight), fixed to the page */
+  #ring { position: fixed; border: 3px solid var(--gold); border-radius: 12px; pointer-events: none; z-index: 50; box-shadow: 0 0 0 4px rgba(242,177,52,.28), 0 0 24px rgba(242,177,52,.5); }
+  #cursor { position: fixed; left: 0; top: 0; width: 26px; height: 26px; pointer-events: none; z-index: 60; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+  #ripple { position: fixed; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; border: 3px solid var(--red); pointer-events: none; z-index: 55; opacity: 0; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div><h1>Meet &amp; Confer Hub</h1><div class="sub">One link for staff input, meeting notes, and the list we bring to the district</div></div>
+    <span class="tag">Demo · sample data only</span>
+  </div>
+</header>
+
+<section class="chooser" id="chooser">
+  <h2>One link instead of a Padlet, a Google Form, and a pile of emails.</h2>
+  <p class="lede">Each site gets one page. Staff post needs, wants, wishes, and questions, 👍 what they agree with, and read a quick summary of every meeting. Reps get a checklist, automatic "top areas," and a one-click copy for the district spreadsheet.</p>
+  <div class="why">
+    <div><b>For staff</b>Padlet-style columns, anonymous option, duplicate warning, and they can see where their input went.</div>
+    <div><b>For reps</b>Every December task in one place: intro email, survey, share-back, and the district spreadsheet.</div>
+    <div><b>For the district</b>A read-only summary of each site, ranked by what staff care about most.</div>
+  </div>
+  <div class="tours">
+    <button class="tour-card" data-tour="staff"><span class="kicker">2 minutes</span><span class="t">Staff tour</span><span class="d">What a teacher or classified staff member sees when they open the link.</span><span class="go">Play the staff tour ▶</span></button>
+    <button class="tour-card" data-tour="rep"><span class="kicker">2 minutes</span><span class="t">Rep &amp; district tour</span><span class="d">What a committee member sees: the checklist, top areas, sorting posts, and exporting the list.</span><span class="go">Play the rep tour ▶</span></button>
+    <a class="tour-card" href="app.html" style="text-decoration:none;color:inherit"><span class="kicker">Hands-on</span><span class="t">Explore it yourself</span><span class="d">Click around the demo and switch between Staff, Rep, and District views.</span><span class="go">Open the demo ↗</span></a>
+  </div>
+  <p class="fine">Everything here is sample data that lives only in your browser. The real hub runs on Google Apps Script and a Google Sheet, so staff sign in with their district Google account.</p>
+</section>
+
+<section class="player" id="player" hidden>
+  <aside class="caption" aria-live="polite">
+    <div class="which" id="which"></div>
+    <h3 id="stepTitle"></h3>
+    <p id="stepText"></p>
+    <div class="bar"><i id="barFill"></i></div>
+    <div class="count" id="count"></div>
+    <div class="controls">
+      <button class="btn" id="back" aria-label="Previous step">◀ Back</button>
+      <button class="btn primary" id="play">⏸ Pause</button>
+      <button class="btn" id="next" aria-label="Next step">Next ▶</button>
+    </div>
+    <div class="links">
+      <button id="restart">Restart</button>
+      <button id="switchTour"></button>
+      <button id="home">All tours</button>
+      <a href="app.html" target="_blank" rel="noopener">Explore it yourself ↗</a>
+    </div>
+  </aside>
+  <div class="stage">
+    <div class="chrome" aria-hidden="true"><i></i><i></i><i></i><span class="url" id="url">Meet &amp; Confer Hub · Sample Site</span></div>
+    <div class="viewport" id="viewport"><iframe id="app" title="Meet and Confer Hub demo" src="app.html?embed=1"></iframe></div>
+  </div>
+</section>
+
+<div id="ring" hidden></div>
+<div id="ripple"></div>
+<svg id="cursor" hidden viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2l7 19 2.6-7.4L20 11z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg>
+
+<script>
+/* ===================== Player plumbing ===================== */
+const $ = (s) => document.querySelector(s);
+const frame = $('#app'), viewport = $('#viewport');
+let W = null, D = null;               // iframe window / document
+let LOGICAL_W = 1280, LOGICAL_H = 800, SCALE = 1;
+let runId = 0, fast = false, playing = true;
+let tour = null, stepIdx = 0;
+const ABORT = 'abort';
+
+function layout() {
+  const w = viewport.clientWidth || 800;
+  LOGICAL_W = w < 640 ? 420 : 1280;
+  LOGICAL_H = w < 640 ? 760 : 780;
+  SCALE = w / LOGICAL_W;
+  frame.style.width = LOGICAL_W + 'px'; frame.style.height = LOGICAL_H + 'px';
+  frame.style.transform = `scale(${SCALE})`;
+  viewport.style.height = Math.round(LOGICAL_H * SCALE) + 'px';
+}
+window.addEventListener('resize', layout);
+
+const S = (code) => W.eval(code);            // run code inside the demo app
+const q = (sel) => D.querySelector(sel);
+const qText = (sel, text) => Array.from(D.querySelectorAll(sel)).find(e => e.textContent.includes(text));
+
+function wait(ms) {
+  const id = runId;
+  return new Promise((res, rej) => {
+    const done = () => (id === runId ? res() : rej(ABORT));
+    setTimeout(done, fast ? 0 : ms);   // fast mode still yields, so the app finishes re-rendering
+  });
+}
+function rectOf(el) {
+  const f = frame.getBoundingClientRect(), r = el.getBoundingClientRect();
+  return { x: f.left + r.left * SCALE, y: f.top + r.top * SCALE, w: r.width * SCALE, h: r.height * SCALE };
+}
+function inView(el) {
+  const r = el.getBoundingClientRect();
+  // Scroll only the demo's own window (scrollIntoView would also scroll this page).
+  if (r.top < 70 || r.bottom > W.innerHeight - 10) W.scrollTo(0, Math.max(0, W.scrollY + r.top - W.innerHeight / 2 + Math.min(r.height, W.innerHeight * .6) / 2));
+}
+
+/* Fake cursor state (animated with JS so it also works when the tab is in the background). */
+const cur = { x: 0, y: 0, target: null, fx: .5, fy: .5 };
+
+/* Highlight ring follows its element every frame. */
+let ringEl = null;
+function ring(el) { ringEl = el || null; $('#ring').hidden = !ringEl; }
+(function follow() {
+  if (ringEl && ringEl.isConnected) {
+    const r = rectOf(ringEl), pad = 6, ringBox = $('#ring');
+    ringBox.style.left = (r.x - pad) + 'px'; ringBox.style.top = (r.y - pad) + 'px';
+    ringBox.style.width = (r.w + pad * 2) + 'px'; ringBox.style.height = (r.h + pad * 2) + 'px';
+  } else if (ringEl) { $('#ring').hidden = true; }
+  if (cur.target && cur.target.isConnected) {     // keep cursor glued to its target while the page reflows
+    const r = rectOf(cur.target); placeCursor(r.x + r.w * cur.fx, r.y + r.h * cur.fy);
+  }
+  requestAnimationFrame(follow);
+})();
+
+function placeCursor(x, y) { cur.x = x; cur.y = y; const c = $('#cursor'); c.style.transform = `translate(${x - 3}px, ${y - 2}px)`; }
+async function pointAt(el, fx = .5, fy = .5) {
+  if (!el) return;
+  inView(el);
+  $('#cursor').hidden = false;
+  cur.target = null;
+  const r = rectOf(el), tx = r.x + r.w * fx, ty = r.y + r.h * fy;
+  if (fast) { placeCursor(tx, ty); cur.target = el; cur.fx = fx; cur.fy = fy; return; }
+  const sx = cur.x || (frame.getBoundingClientRect().left + 40), sy = cur.y || (frame.getBoundingClientRect().top + 40);
+  const dur = 650, t0 = performance.now(), id = runId;
+  await new Promise(res => {
+    (function step(now) {
+      if (id !== runId) return res();
+      const k = Math.min(1, (now - t0) / dur), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      placeCursor(sx + (tx - sx) * e, sy + (ty - sy) * e);
+      k < 1 ? requestAnimationFrame(step) : res();
+    })(t0);
+  });
+  if (id !== runId) throw ABORT;
+  cur.target = el; cur.fx = fx; cur.fy = fy;
+}
+function ripple() {
+  if (fast) return;
+  const r = $('#ripple'); r.style.left = cur.x + 'px'; r.style.top = cur.y + 'px';
+  const t0 = performance.now();
+  (function step(now) {
+    const k = Math.min(1, (now - t0) / 450);
+    r.style.opacity = String(1 - k); r.style.transform = `scale(${0.4 + k})`;
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+async function click(el, fx, fy) { if (!el) return; await pointAt(el, fx, fy); ripple(); await wait(180); el.click(); await wait(350); }
+async function press(el) { if (!el) return; await pointAt(el); ripple(); await wait(250); }   // point + click effect, no real click
+async function type(el, text) {
+  if (!el) return;
+  await pointAt(el, .15, .5); ripple(); el.focus();
+  if (fast) { el.value = text; el.dispatchEvent(new W.Event('input', { bubbles: true })); return; }
+  for (const ch of text) { el.value += ch; el.dispatchEvent(new W.Event('input', { bubbles: true })); await wait(38); }
+}
+async function choose(sel, value) { const el = q(sel); await pointAt(el); ripple(); await wait(250); el.value = value; el.dispatchEvent(new W.Event('change', { bubbles: true })); await wait(400); }
+async function tab(view) { await click(q(`#tabs button[data-view="${view}"]`)); W.scrollTo(0, 0); await wait(300); }
+function as(role) { S(`Demo.setRole('${role}'); H = Demo.getHub(); render(); scrollTo(0, 0);`); }
+function resetApp(role) {
+  S(`Demo.reset(); Demo.setRole('${role}'); H = Demo.getHub(); ui.adding = null; ui.open = {}; ui.full = {}; ui.q = '';
+     render(); show('home'); scrollTo(0, 0);`);
+  ring(null); cur.target = null;
+}
+
+/* ===================== The tours ===================== */
+const TOURS = {
+  staff: {
+    name: 'Staff tour', other: 'rep', role: 'staff',
+    steps: [
+      { t: 'One link, one page', x: 'Staff open a single link and sign in with their district Google account. Home explains Meet & Confer in two sentences: it gathers what staff need and brings it to the Board. It is not about salary.',
+        run: async () => { ring(q('#welcome')); await pointAt(q('#welcome'), .3, .4); await wait(3800); } },
+      { t: 'The four December steps', x: 'Staff always know where we are. The current step is outlined in red: share by Dec 1, come to the drop-in, check the list Dec 4, and the rep brings it to the Dec 8 meeting.',
+        run: async () => { ring(q('#steps')); await pointAt(q('#steps .step.now') || q('#steps'), .5, .3); await wait(3800); ring(q('#meetInfo')); await pointAt(q('#meetInfo'), .4, .5); await wait(2200); } },
+      { t: 'Share Your Input', x: 'One click takes staff to the board. It looks like the Padlet they already know: Needs, Wants, Wishes, and Questions.',
+        run: async () => { await tab('board'); ring(q('#cols')); await pointAt(q('.c-Need .colhead'), .5, .5); await wait(3400); } },
+      { t: 'Adding a need', x: 'Under any column, "+ Add" opens a small box. Watch what happens when someone types something that has already been posted…',
+        run: async () => { ring(null); await click(q('.c-Need .add')); ring(q('[data-add-form="Need"]')); await type(q('[data-add-form="Need"] [name=title]'), 'Printer paper runs out'); await wait(600); } },
+      { t: '"Already posted?"', x: 'The hub spots the match and suggests a 👍 instead of a duplicate. One click, and the existing post goes from 14 to 15 agreements. No second Google Form needed to rank things.',
+        run: async () => { S(`refreshSimilar(document.querySelector('[data-add-form="Need"]'))`); await wait(300); ring(q('.c-Need .similar')); await wait(2600);
+          await click(q('.c-Need .similar [data-agree]')); ring(qText('.c-Need .post', 'More printer paper')); await wait(2400); await click(q('[data-cancel-add]')); } },
+      { t: 'Posting a question, anonymously', x: 'Anyone can post anonymously. The hub doesn\'t store their name at all, so even the rep can\'t see who wrote it.',
+        run: async () => { ring(null); await click(q('.c-Question .add')); const f = '[data-add-form="Question"]'; ring(q(f));
+          await type(q(f + ' [name=title]'), 'Will substitutes be easier to get on Fridays?'); await wait(400);
+          await click(q(f + ' [name=anon]')); await wait(400); await click(q(f + ' [type=submit]')); await wait(500);
+          ring(qText('.c-Question .post', 'substitutes')); await pointAt(qText('.c-Question .post', 'substitutes'), .5, .4); await wait(2600); } },
+      { t: 'Comments and status', x: 'Staff can comment on any post. Once the rep sorts a post, staff also see where it went: "Going to M&C," "Referred to site," or "Answered," with a short note.',
+        run: async () => { const btn = q('[data-cmts="9"]'); await click(btn); ring(btn.closest('.post'));
+          await type(q('[data-cmt-input="9"]'), 'Same question for counselors.'); await click(q('[data-cmt-send="9"]')); await wait(600);
+          ring(qText('.post', 'one rep or two')); await pointAt(qText('.post', 'one rep or two').querySelector('.note'), .3, .5); await wait(3000); } },
+      { t: 'Meeting notes, the quick version', x: 'After each monthly meeting the rep posts a 3–5 bullet summary. Staff who want more can open the full notes or the recording.',
+        run: async () => { ring(null); await tab('notes'); ring(q('.quick')); await pointAt(q('.quick'), .3, .3); await wait(3200);
+          await click(q('[data-full]')); ring(q('.md.full')); await wait(2600); } },
+      { t: 'What We Heard', x: 'Before the list goes to the district, staff can check it here, with the top areas so far. This is the Dec 4 "share it back" step, built in.',
+        run: async () => { ring(null); await tab('list'); ring(q('#listBanner')); await pointAt(q('#listBanner'), .4, .7); await wait(3600); ring(q('#ourList')); await wait(2800); } },
+      { t: 'That\'s the whole staff side', x: 'Four tabs, one link. Staff never see the rep tools, hidden posts, or who wrote anonymous posts. Next: the rep & district tour.',
+        run: async () => { ring(null); $('#cursor').hidden = true; await wait(1500); } }
+    ]
+  },
+  rep: {
+    name: 'Rep & district tour', other: 'staff', role: 'rep',
+    steps: [
+      { t: 'Same link, one more tab', x: 'When a rep opens the same link, the hub recognizes them and adds a Rep Page. Nobody else can change statuses, hide posts, or post notes.',
+        run: async () => { ring(q('#tabs')); await pointAt(q('#tabs button[data-view="rep"]')); await wait(3200); await tab('rep'); } },
+      { t: 'The numbers at a glance', x: 'Posts, how many staff took part, total 👍, and what still needs sorting.',
+        run: async () => { ring(q('#kpis')); await pointAt(q('#kpis'), .2, .5); await wait(3000); } },
+      { t: 'Top areas, sorted automatically', x: 'The hub sorts every post into an area like Time & schedules, Benefits & leave, or Supplies, and ranks the areas by posts + 👍. This replaces the Google Form ranking step.',
+        run: async () => { const card = q('#areas').closest('.card'); ring(card); await pointAt(q('#areas .area'), .3, .3); await wait(4600); } },
+      { t: 'The December checklist', x: 'The HR director\'s homework, with due dates. The intro email and the Dec 4 share-back email are written for you; one click copies them.',
+        run: async () => { ring(q('#taskCard')); await pointAt(q('#tasks .task'), .5, .3); await wait(2600);
+          await press(q('[data-copy-email]')); S(`toast('Intro email copied. Paste it into Gmail.')`); await wait(2600); } },
+      { t: 'Sorting a post', x: 'Each post gets a status. "Going to M&C" goes to the district. "Referred to site" goes to our principal instead of getting dropped. The note is shown to staff.',
+        run: async () => { const row = q('[data-status="2"]').closest('tr'); ring(row);
+          await choose('[data-status="2"]', 'Going to M&C'); ring(q('[data-status="2"]').closest('tr'));
+          await type(q('[data-note="2"]'), 'Bringing to the Dec 8 meeting.'); q('[data-note="2"]').dispatchEvent(new W.Event('change', { bubbles: true })); await wait(1800); } },
+      { t: 'Fixing an area', x: 'If the automatic sorting guesses wrong, the rep changes it here and the top areas update.',
+        run: async () => { ring(q('[data-area="10"]').closest('tr')); await choose('[data-area="10"]', 'Staffing & student support'); await wait(1800); } },
+      { t: 'One click for the district spreadsheet', x: 'Every post, grouped by area and most-agreed first, copies straight into the district\'s master spreadsheet. A CSV download is there too.',
+        run: async () => { ring(q('#copyTsv').closest('.card')); await press(q('#copyTsv')); S(`toast('Copied. Paste into the district spreadsheet.')`); await wait(3000); } },
+      { t: 'Posting meeting notes', x: 'After each meeting: a title, a quick summary (what staff see first), optional full notes, and an optional recording link.',
+        run: async () => { ring(null); await tab('notes'); await click(q('#newNote')); ring(q('#noteForm'));
+          await type(q('#nTitle'), 'M&C #2: Budget & benefits (Dec 8)');
+          await type(q('#nSummary'), '- Heard a budget and benefits overview\n- Our top 3 areas were shared with the committee\n- Next: narrowing to ~15 items in January');
+          await click(q('#saveNote')); await wait(500); ring(q('#notes .update')); await pointAt(q('#notes .quick'), .3, .3); await wait(2600); } },
+      { t: 'The district view', x: 'District leaders can be given a read-only view of each site: everything posted, top areas, and statuses. They can\'t change anything.',
+        run: async () => { ring(null); as('viewer'); S(`show('rep')`); await wait(400); ring(q('#repLede')); await pointAt(q('#repLede'), .3, .5); await wait(2600);
+          ring(q('#areas').closest('.card')); await wait(2600); } },
+      { t: 'That\'s the rep side', x: 'One link per site: staff input, meeting notes, the share-back, and the district export. Copying it for another campus takes about 10 minutes.',
+        run: async () => { ring(null); $('#cursor').hidden = true; await wait(1500); } }
+    ]
+  }
+};
+
+/* ===================== Running steps ===================== */
+function paint() {
+  const st = tour.steps[stepIdx];
+  $('#which').textContent = tour.name;
+  $('#stepTitle').textContent = st.t;
+  $('#stepText').textContent = st.x;
+  $('#count').textContent = `Step ${stepIdx + 1} of ${tour.steps.length}`;
+  $('#barFill').style.width = ((stepIdx + 1) / tour.steps.length * 100) + '%';
+  $('#back').disabled = stepIdx === 0;
+  $('#play').textContent = playing ? '⏸ Pause' : '▶ Play';
+  $('#switchTour').textContent = 'Switch to ' + TOURS[tour.other].name.toLowerCase();
+}
+
+async function goTo(n, opts = {}) {
+  const id = ++runId;
+  stepIdx = Math.max(0, Math.min(n, tour.steps.length - 1));
+  paint();
+  try {
+    // Rebuild the app state by fast-replaying earlier steps, so Back and Next always land cleanly.
+    resetApp(tour.role);
+    fast = true;
+    for (let i = 0; i < stepIdx; i++) await tour.steps[i].run();
+    fast = false;
+    if (id !== runId) return;
+    await wait(opts.firstDelay ?? 300);
+    await tour.steps[stepIdx].run();
+    if (id !== runId) return;
+    if (playing && stepIdx < tour.steps.length - 1) { await wait(500); goTo(stepIdx + 1); }
+    else if (stepIdx === tour.steps.length - 1) { playing = false; paint(); }
+  } catch (e) { fast = false; if (e !== ABORT) console.error(e); }
+}
+
+function startTour(name) {
+  tour = TOURS[name]; playing = true;
+  $('#chooser').hidden = true; $('#player').hidden = false;
+  try { history.replaceState(null, '', '?tour=' + name); } catch (e) {}
+  layout();
+  const begin = () => { W = frame.contentWindow; D = W.document; goTo(0, { firstDelay: 600 }); };
+  if (frame.contentWindow && frame.contentWindow.document.readyState === 'complete' && frame.contentWindow.H) begin();
+  else frame.addEventListener('load', () => setTimeout(begin, 200), { once: true });
+}
+function stop() { runId++; ring(null); $('#cursor').hidden = true; cur.target = null; }
+
+document.querySelectorAll('[data-tour]').forEach(b => b.addEventListener('click', () => startTour(b.dataset.tour)));
+$('#next').addEventListener('click', () => { if (stepIdx < tour.steps.length - 1) goTo(stepIdx + 1); });
+$('#back').addEventListener('click', () => { if (stepIdx > 0) goTo(stepIdx - 1); });
+$('#restart').addEventListener('click', () => { playing = true; goTo(0); });
+$('#play').addEventListener('click', () => {
+  playing = !playing; paint();
+  if (playing) goTo(stepIdx === tour.steps.length - 1 ? 0 : stepIdx + 1);
+});
+$('#switchTour').addEventListener('click', () => { stop(); startTour(tour.other); });
+$('#home').addEventListener('click', () => {
+  stop(); $('#player').hidden = true; $('#chooser').hidden = false;
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+});
+
+const want = new URLSearchParams(location.search).get('tour');
+if (TOURS[want]) startTour(want);
+</script>
+</body>
+</html>
